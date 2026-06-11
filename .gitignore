@@ -1,0 +1,30 @@
+# Environment
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+
+# Data cache and model artifacts
+data/cache/*.parquet
+model/saved/*.keras
+model/saved/*.pkl
+model/saved/*.h5
+
+# Logs (keep folder, ignore contents)
+logs/*.csv
+logs/*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store

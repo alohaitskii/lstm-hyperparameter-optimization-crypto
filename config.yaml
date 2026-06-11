@@ -1,0 +1,63 @@
+data:
+  source: "yfinance"          # Yahoo Finance — bebas geo-block, gaya paper akademik
+  tickers:                    # Registry 22 koin terverifikasi punya data 15m di Yahoo
+    - BTC-USD                 # Bitcoin
+    - ETH-USD                 # Ethereum
+    - BNB-USD                 # BNB
+    - SOL-USD                 # Solana
+    - XRP-USD                 # XRP
+    - ADA-USD                 # Cardano
+    - DOGE-USD                # Dogecoin
+    - TRX-USD                 # TRON
+    - AVAX-USD                # Avalanche
+    - LINK-USD                # Chainlink
+    - DOT-USD                 # Polkadot
+    - LTC-USD                 # Litecoin
+    - BCH-USD                 # Bitcoin Cash
+    - NEAR-USD                # NEAR Protocol
+    - ATOM-USD                # Cosmos
+    - ETC-USD                 # Ethereum Classic
+    - SHIB-USD                # Shiba Inu
+    - HBAR-USD                # Hedera
+    - XLM-USD                 # Stellar
+    - FIL-USD                 # Filecoin
+    - ALGO-USD                # Algorand
+    - VET-USD                 # VeChain
+  primary_tf: "15m"           # Yahoo membatasi riwayat 15m ke 60 hari terakhir
+  secondary_tf: "1h"          # konfirmasi trend; Yahoo menyediakan 730 hari utk 1h
+  candle_limit: 5000          # 15m x 5000 = ~52 hari (di bawah batas 60 hari Yahoo)
+  cache_ttl_minutes: 15
+  cache_dir: "data/cache"
+  fetch_delay_seconds: 3.0    # jeda antar fetch Yahoo Finance (rate-limit protection)
+  fetch_batch_size: 10        # setelah N ticker, jeda fetch_batch_pause (train_all.py)
+  fetch_batch_pause: 12.0     # detik jeda antar batch
+
+features:
+  sequence_length: 60
+  lookahead_n: 4
+  move_threshold: 0.003
+
+model:
+  lstm_units: [128, 64]
+  dense_units: 32
+  dropout_rate: 0.2
+  batch_size: 32
+  epochs: 100
+  learning_rate: 0.001
+  patience_early_stop: 10
+  n_splits_cv: 5
+  # Artefak per ticker disimpan otomatis di model/saved/{TICKER}/
+  # (model.keras + scaler.pkl + fgi_encoder.pkl)
+
+signals:
+  long_threshold: 0.62
+  short_threshold: 0.38
+  min_confirmations: 2
+  atr_tp1_multiplier: 1.5
+  atr_tp2_multiplier: 2.5
+  atr_sl_multiplier: 1.0
+
+logging:
+  predictions_csv: "logs/predictions.csv"
+  validation_csv: "logs/validation_report.csv"
+  log_level: "INFO"

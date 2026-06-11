@@ -1,0 +1,13 @@
+yfinance>=0.2.40
+pandas>=2.0.0
+numpy>=1.24.0
+tensorflow>=2.14.0
+scikit-learn>=1.3.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+rich>=13.0.0
+PyYAML>=6.0
+pyarrow>=12.0.0
+# NOTE: pandas-ta dihapus — instalasinya bermasalah di numpy>=2.0.
+#       Semua indikator teknikal kini diimplementasi native di data/indicators.py.
+# NOTE: ccxt dihapus — sumber data sekarang Yahoo Finance (yfinance).
