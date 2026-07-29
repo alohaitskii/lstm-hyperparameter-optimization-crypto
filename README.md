@@ -272,6 +272,86 @@ berguna untuk perbandingan eksperimen di skripsi/paper.
 
 ---
 
+## Optimasi Hyperparameter (GA vs Grid Search) — untuk Skripsi
+
+Modul `optimization/` membandingkan tiga metode penyetelan hyperparameter LSTM:
+**Algoritma Genetika**, **Grid Search** (ber-budget), dan **baseline manual**
+(nilai `config.yaml` saat ini, yang menghasilkan model di `model/saved/`).
+
+### Metodologi (ringkas, untuk bab metodologi)
+
+- **Ruang pencarian identik** untuk GA & Grid (6 hyperparameter, 4.800 kombinasi
+  penuh — lihat `optimization.search_space` di `config.yaml`).
+  `lookahead_n` dan `move_threshold` adalah *pendefinisi tugas* dan **tidak**
+  ikut dicari.
+- **Fitness pencarian** = AUC pada satu split validasi kronologis
+  (`split_chronological`), training dengan `search_epochs` tereduksi + early
+  stopping. Anti-leakage penuh: scaler fit train-only, sequence dibentuk
+  setelah scaling, tanpa shuffle.
+- **Evaluasi akhir** konfigurasi terbaik tiap metode = `walk_forward_validate`
+  penuh (`final_splits` fold) + backtest hit-rate — mencegah overfitting pada
+  satu split validasi.
+- **Grid ber-budget**: subsample deterministik dengan posisi merata di seluruh
+  enumerasi (bukan N kombinasi pertama, yang bias ke satu sudut ruang).
+- **Reproducible**: seed (random/numpy/TF) dari config, dicatat di setiap CSV.
+- **Baseline tidak tersentuh**: model hasil optimasi ditulis ke
+  `model/optimized/{TICKER}/{method}/`; `model/saved/` tidak pernah ditimpa.
+
+### Alur yang disarankan
+
+```bash
+# 1. Uji cepat end-to-end (menit-an)
+python run_optimization.py --fast --tickers BTC-USD
+
+# 2. Pilot: ukur waktu per-evaluasi + estimasi total (tidak menjalankan search)
+python run_optimization.py --pilot
+
+# 3. Eksperimen penuh: 5 koin x 3 metode (berjam-jam di CPU)
+python run_optimization.py
+
+# 4. Kalau terputus (Ctrl+C / Colab disconnect) — lanjutkan:
+python run_optimization.py --skip-done
+```
+
+Argumen penting: `--methods ga grid manual`, `--budget N` (budget-matched GA vs
+Grid), `--final-splits N`, `--seed N`, `--output-root PATH`.
+
+### Output
+
+| File | Isi |
+|------|-----|
+| `logs/optimization_results.csv` | **Checkpoint master** (append per ticker×metode — dasar `--skip-done`) |
+| `logs/optimization_summary_{ts}.csv` | Tabel utama skripsi (semua ticker × metode) |
+| `logs/optimization_{TICKER}_{ts}.csv` | Tabel per koin (lampiran) |
+| `logs/ga_history_{TICKER}_{ts}.csv` | Best/mean fitness per generasi (grafik konvergensi GA) |
+| `model/optimized/{TICKER}/{method}/` | Model pemenang + scaler + encoder + `hyperparams.json` |
+
+### Google Colab
+
+Sesi Colab bisa terputus sewaktu-waktu. Mount Google Drive lalu arahkan output
+ke sana agar hasil persisten:
+
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+```
+
+```bash
+python run_optimization.py --output-root "/content/drive/MyDrive/skripsi-lstm" --skip-done
+```
+
+GPU terdeteksi otomatis dan dicatat di log. Untuk GPU, profil yang lebih besar
+layak dipakai: `population_size: 16`, `generations: 10`, `grid.budget: 160`,
+`search_epochs: 30`, `final_splits: 5` (edit `config.yaml`).
+
+### Smoke test optimasi (offline)
+
+```bash
+python smoke_test_optimization.py
+```
+
+---
+
 ## Jaminan Anti-Leakage
 
 1. **Feature shift** — `apply_anti_leakage()` memanggil `features.shift(1)` sehingga model hanya melihat data yang tersedia *sebelum* timestamp label.

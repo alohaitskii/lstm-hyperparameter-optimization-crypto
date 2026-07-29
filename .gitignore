@@ -15,9 +15,10 @@ env/
 
 # Data cache and model artifacts
 data/cache/*.parquet
-model/saved/*.keras
-model/saved/*.pkl
-model/saved/*.h5
+model/saved/**/*.keras
+model/saved/**/*.pkl
+model/saved/**/*.h5
+model/optimized/**
 
 # Logs (keep folder, ignore contents)
 logs/*.csv

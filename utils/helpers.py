@@ -86,3 +86,16 @@ def ensure_dir(path: str | Path) -> Path:
 def project_root() -> Path:
     """Absolute path to the project root."""
     return Path(__file__).resolve().parent.parent
+
+
+def set_global_seed(seed: int, include_tf: bool = True) -> None:
+    """Seed random, numpy, and (lazily) TensorFlow for reproducibility."""
+    import random
+
+    random.seed(seed)
+    np.random.seed(seed)
+    if include_tf:
+        # Lazy import so lightweight callers don't pay the TF import cost
+        import tensorflow as tf
+
+        tf.random.set_seed(seed)

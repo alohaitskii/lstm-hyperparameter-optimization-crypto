@@ -350,9 +350,20 @@ def _save_scan_log(results: list[dict[str, Any]], generated_at: str) -> None:
     log.info(f"Scan log saved → {out_path}")
 
 
-def run_backtest(cfg: dict[str, Any], lookback: int = 200, ticker: str | None = None) -> None:
+def run_backtest(
+    cfg: dict[str, Any],
+    lookback: int = 200,
+    ticker: str | None = None,
+    preloaded: tuple | None = None,
+    tag: str = "",
+) -> dict[str, Any] | None:
     """Walk through the last N candles of the held-out set, generating signals
     and comparing them with the realized close N candles forward.
+
+    `preloaded=(model, scaler, fgi_encoder)` skips loading from model/saved/ —
+    used by the hyperparameter-optimization experiment to backtest candidate
+    models WITHOUT touching baseline artifacts. `tag` is appended to the
+    output CSV name. Returns a summary dict (callers may ignore it).
     """
     log = get_logger()
     ticker = _resolve_ticker(cfg, ticker)
@@ -363,13 +374,16 @@ def run_backtest(cfg: dict[str, Any], lookback: int = 200, ticker: str | None = 
     lookahead_n = feat_cfg["lookahead_n"]
     move_threshold = feat_cfg["move_threshold"]
 
-    model, scaler, fgi_encoder = load_artifacts(ticker)
+    if preloaded is not None:
+        model, scaler, fgi_encoder = preloaded
+    else:
+        model, scaler, fgi_encoder = load_artifacts(ticker)
     if model is None:
         console.print(
             f"[red]Model {ticker} belum dilatih.[/red] Jalankan: "
             f"python main.py --mode train --ticker {ticker}"
         )
-        return
+        return None
 
     bundle = fetch_all(cfg, ticker=ticker)
     # Rebuild features (no shift — caller controls slicing) and clean rows
@@ -455,13 +469,23 @@ def run_backtest(cfg: dict[str, Any], lookback: int = 200, ticker: str | None = 
     )
 
     safe = ticker_to_safe_name(ticker)
+    suffix = f"_{tag}" if tag else ""
     out_path = (
         project_root() / "logs"
-        / f"backtest_{safe}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
+        / f"backtest_{safe}{suffix}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
     )
     ensure_dir(out_path.parent)
     df.to_csv(out_path, index=False)
     log.info(f"Backtest results saved → {out_path}")
+
+    return {
+        "evaluated": len(rows),
+        "long": long_signals,
+        "short": short_signals,
+        "hold": hold_signals,
+        "hit_rate": acc,
+        "csv": str(out_path),
+    }
 
 
 # --------------------------------------------------------------------------- #

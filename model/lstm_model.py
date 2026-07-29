@@ -96,8 +96,14 @@ def train_model(
     y_val: np.ndarray,
     cfg: Mapping[str, Any],
     save_path: str | Path | None = None,
+    verbose: int = 2,
 ) -> tf.keras.callbacks.History:
-    """Fit the model with the standard callback stack."""
+    """Fit the model with the standard callback stack.
+
+    verbose=0 silences per-epoch output — used by hyperparameter search
+    where dozens of short trainings would flood the console.
+    """
+    cb_verbose = 1 if verbose else 0
     callbacks: list = []
     callbacks.append(
         EarlyStopping(
@@ -105,11 +111,11 @@ def train_model(
             mode="max",
             patience=cfg.get("patience_early_stop", 10),
             restore_best_weights=True,
-            verbose=1,
+            verbose=cb_verbose,
         )
     )
     callbacks.append(
-        ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=5, verbose=1)
+        ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=5, verbose=cb_verbose)
     )
 
     if save_path is not None:
@@ -144,7 +150,7 @@ def train_model(
         batch_size=cfg.get("batch_size", 32),
         callbacks=callbacks,
         class_weight=class_weight,
-        verbose=2,
+        verbose=verbose,
     )
     return history
 
@@ -167,9 +173,17 @@ def load(path: str | Path) -> tf.keras.Model:
 # --------------------------------------------------------------------------- #
 # Per-ticker artifact storage (multi-pair)
 # --------------------------------------------------------------------------- #
-def save_artifacts(model: tf.keras.Model, scaler, encoder, ticker: str) -> None:
-    """Persist model + scaler + FGI encoder into model/saved/{TICKER}/."""
-    d = get_model_dir(ticker)
+def save_artifacts(
+    model: tf.keras.Model, scaler, encoder, ticker: str,
+    out_dir: str | Path | None = None,
+) -> None:
+    """Persist model + scaler + FGI encoder.
+
+    Default target is model/saved/{TICKER}/ (baseline). Pass `out_dir` to
+    write elsewhere (e.g. model/optimized/{TICKER}/{method}/) WITHOUT
+    touching the baseline artifacts.
+    """
+    d = Path(out_dir) if out_dir is not None else get_model_dir(ticker)
     ensure_dir(d)
     model.save(d / "model.keras")
     with open(d / "scaler.pkl", "wb") as f:

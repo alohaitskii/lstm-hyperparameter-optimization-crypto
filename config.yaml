@@ -61,3 +61,35 @@ logging:
   predictions_csv: "logs/predictions.csv"
   validation_csv: "logs/validation_report.csv"
   log_level: "INFO"
+
+# ---------------------------------------------------------------------------
+# Optimasi hyperparameter (skripsi: GA vs Grid Search vs baseline manual)
+# Default konservatif untuk CPU/pilot. Untuk Colab GPU boleh dinaikkan ke:
+#   population_size: 16, generations: 10, grid.budget: 160,
+#   search_epochs: 30, final_splits: 5
+# CATATAN: lookahead_n & move_threshold adalah pendefinisi tugas — BUKAN
+# hyperparameter, tidak boleh masuk ruang pencarian.
+# ---------------------------------------------------------------------------
+optimization:
+  seed: 42
+  search_epochs: 20          # epoch tereduksi saat pencarian (GA & Grid) + early stopping
+  final_splits: 3            # jumlah fold walk-forward untuk evaluasi akhir (hemat waktu)
+  final_epochs: null         # null = pakai model.epochs penuh; isi angka utk hemat waktu
+  output_root: null          # null = repo; isi path (mis. Google Drive) agar hasil persisten
+  tickers: [BTC-USD, ETH-USD, SOL-USD, LINK-USD, SHIB-USD]
+  search_space:
+    sequence_length: [30, 45, 60, 90, 120]
+    lstm_units_1: [32, 64, 96, 128]
+    lstm_units_2: [16, 32, 48, 64]
+    dropout_rate: [0.1, 0.2, 0.3, 0.4]
+    learning_rate: [0.01, 0.005, 0.001, 0.0005, 0.0001]
+    batch_size: [16, 32, 64]
+  ga:
+    population_size: 10
+    generations: 6
+    tournament_size: 3
+    crossover_rate: 0.8
+    mutation_rate: 0.15
+    elitism: 2               # ≈ 40–50 evaluasi/koin dengan caching fitness
+  grid:
+    budget: 50               # budget-matched dengan GA (grid penuh 4.800 tak realistis)
