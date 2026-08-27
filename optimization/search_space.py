@@ -42,6 +42,19 @@ DEFAULT_SPACE: dict[str, list] = {
 }
 
 
+def _coprime_stride(total: int, budget: int) -> int:
+    """Langkah terkecil >= total//budget yang relatif prima terhadap total.
+
+    Menjamin i*stride mod total bersifat injektif untuk i < total, sehingga
+    tepat `budget` posisi unik terpilih DAN setiap gen ikut berputar
+    (langkah yang habis dibagi ukuran gen terdalam akan membekukan gen itu).
+    """
+    s = max(1, total // budget)
+    while math.gcd(s, total) != 1:
+        s += 1
+    return s
+
+
 class SearchSpace:
     """Immutable view over the candidate lists, with encode/decode helpers."""
 
@@ -103,18 +116,25 @@ class SearchSpace:
     def iter_grid_budget(self, budget: int | None) -> Iterator[list[int]]:
         """Deterministic, space-covering subsample of the grid.
 
-        When budget >= size, yields the full grid. Otherwise picks evenly
-        spaced positions round(i * total / budget) across the lexicographic
-        enumeration — deterministic AND representative of the whole space
-        (taking the FIRST N combinations would only explore the low end of
-        the first gene, which would bias the comparison).
+        When budget >= size, yields the full grid. Otherwise it walks the
+        lexicographic enumeration in steps of a stride COPRIME to the total
+        (see _coprime_stride): the positions (i * stride) % total are all
+        distinct, and because the stride shares no factor with the space
+        size, EVERY gene keeps rotating through all of its candidate values.
+
+        A naive evenly-spaced stride (total // budget) is wrong here: with
+        4800 combinations and budget 50 the step is exactly 96 — a multiple
+        of the innermost gene's cardinality (batch_size, 3 values) — which
+        freezes that gene at index 0. Grid Search would then explore only a
+        third of the space and its comparison against the GA would be unfair.
         """
         total = self.size()
         if budget is None or budget >= total:
             yield from self.iter_grid()
             return
 
-        wanted = {round(i * total / budget) for i in range(budget)}
+        stride = _coprime_stride(total, budget)
+        wanted = {(i * stride) % total for i in range(budget)}
         for pos, chrom in enumerate(self.iter_grid()):
             if pos in wanted:
                 yield chrom

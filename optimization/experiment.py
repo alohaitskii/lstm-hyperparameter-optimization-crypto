@@ -24,6 +24,7 @@ from __future__ import annotations
 import csv
 import gc
 import json
+import shutil
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -54,9 +55,22 @@ METHODS = ("ga", "grid", "manual")
 
 RESULT_FIELDS = [
     "ticker", "method", "seed", "best_hp_json", "val_auc_search",
-    "wf_auc", "wf_f1", "backtest_hit_rate", "n_evals", "duration_min",
+    "wf_auc", "wf_f1", "backtest_hit_rate",
+    # Hit-rate = benar / sinyal diterbitkan; HOLD tidak masuk penyebut, jadi
+    # jumlah sinyal wajib dicatat agar hit-rate antarmetode bisa dibandingkan
+    # secara adil (model konservatif otomatis terlihat lebih baik tanpa ini).
+    "n_signals_issued", "n_signals_hold", "n_candles_backtest",
+    "n_evals", "duration_min",
     "search_epochs", "final_splits", "timestamp",
 ]
+
+
+def _blank_if_nan(v: Any) -> Any:
+    """CSV-friendly: NaN → string kosong, selain itu nilai apa adanya."""
+    try:
+        return "" if not np.isfinite(v) else v
+    except TypeError:
+        return v
 
 
 # --------------------------------------------------------------------------- #
@@ -86,9 +100,51 @@ def load_done(path: Path) -> set[tuple[str, str]]:
     return done
 
 
+def _migrate_csv_header(path: Path) -> None:
+    """Rewrite an older CSV in place so it matches the current RESULT_FIELDS.
+
+    Appending new columns to a file written with the previous header would
+    shift every value and corrupt the already-valid GA and manual rows. When
+    the header differs we back the file up, then rewrite it with the current
+    fieldnames — old rows preserved as-is, new columns blank-filled. This
+    keeps --skip-done working so finished runs are never repeated.
+    """
+    if not path.exists():
+        return
+
+    with open(path, "r", encoding="utf-8", newline="") as f:
+        try:
+            header = next(csv.reader(f))
+        except StopIteration:
+            return  # file kosong — writer akan menulis header baru
+    if header == RESULT_FIELDS:
+        return
+
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    backup = path.with_name(f"{path.stem}_backup_{ts}{path.suffix}")
+    shutil.copy2(path, backup)
+
+    with open(path, "r", encoding="utf-8", newline="") as f:
+        old_rows = list(csv.DictReader(f))
+
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=RESULT_FIELDS, extrasaction="ignore")
+        w.writeheader()
+        for r in old_rows:
+            w.writerow({k: r.get(k, "") for k in RESULT_FIELDS})
+
+    log.info(
+        f"Header CSV dimigrasi ke skema baru: {path.name} "
+        # ASCII saja: migrasi ini jalur kritis data skripsi, pesannya harus
+        # tetap tampil walau dipanggil dari entry point tanpa perbaikan UTF-8
+        f"({len(old_rows)} baris lama dipertahankan, backup -> {backup.name})"
+    )
+
+
 def append_result(path: Path, row: dict[str, Any]) -> None:
     """Append one result row immediately (checkpoint granularity)."""
     ensure_dir(path.parent)
+    _migrate_csv_header(path)
     new_file = not path.exists()
     with open(path, "a", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=RESULT_FIELDS)
@@ -119,6 +175,37 @@ def _ga_history_writer(output_root: Path, ticker: str, ts: str):
             )
 
     return on_generation
+
+
+def _grid_history_writer(output_root: Path, ticker: str, ts: str):
+    """Returns an on_eval callback that appends grid rows incrementally.
+
+    `best_so_far` is tracked in the closure so the convergence curve can be
+    plotted straight from the CSV without post-processing — the thesis needs
+    fitness-vs-evaluations for BOTH methods, not only the GA.
+    """
+    path = output_root / "logs" / f"grid_history_{ticker_to_safe_name(ticker)}_{ts}.csv"
+    ensure_dir(path.parent)
+    best_so_far = -float("inf")
+
+    def on_eval(row: dict[str, Any]) -> None:
+        nonlocal best_so_far
+        best_so_far = max(best_so_far, float(row["fitness"]))
+        new_file = not path.exists()
+        with open(path, "a", encoding="utf-8", newline="") as f:
+            w = csv.writer(f)
+            if new_file:
+                w.writerow(["eval", "fitness", "best_so_far", "hp_json"])
+            w.writerow(
+                [
+                    row["eval"],
+                    f"{row['fitness']:.6f}",
+                    f"{best_so_far:.6f}",
+                    json.dumps(row["hp"]),
+                ]
+            )
+
+    return on_eval
 
 
 # --------------------------------------------------------------------------- #
@@ -214,12 +301,22 @@ def final_evaluate_and_save(
         preloaded=(model, scaler, fgi_encoder), tag=method,
     )
     hit_rate = float(bt["hit_rate"]) if bt else float("nan")
+    n_issued = int(bt["long"] + bt["short"]) if bt else float("nan")
+    n_hold = int(bt["hold"]) if bt else float("nan")
+    n_candles = int(bt["evaluated"]) if bt else float("nan")
 
     tf.keras.backend.clear_session()
     del model
     gc.collect()
 
-    return {"wf_auc": wf_auc, "wf_f1": wf_f1, "hit_rate": hit_rate}
+    return {
+        "wf_auc": wf_auc,
+        "wf_f1": wf_f1,
+        "hit_rate": hit_rate,
+        "n_signals_issued": n_issued,
+        "n_signals_hold": n_hold,
+        "n_candles_backtest": n_candles,
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -251,7 +348,10 @@ def run_method(
         )
         best_hp, val_auc, n_evals = res["best_hp"], res["best_fitness"], res["n_evals"]
     elif method == "grid":
-        res = run_grid(X_2d, y_1d, cfg, space, seed=seed, budget=budget)
+        res = run_grid(
+            X_2d, y_1d, cfg, space, seed=seed, budget=budget,
+            on_eval=_grid_history_writer(output_root, ticker, ts),
+        )
         best_hp, val_auc, n_evals = res["best_hp"], res["best_fitness"], res["n_evals"]
     elif method == "manual":
         best_hp = manual_hp_from_cfg(cfg)
@@ -277,6 +377,9 @@ def run_method(
         "wf_auc": f"{final['wf_auc']:.6f}" if np.isfinite(final["wf_auc"]) else "",
         "wf_f1": f"{final['wf_f1']:.6f}" if np.isfinite(final["wf_f1"]) else "",
         "backtest_hit_rate": f"{final['hit_rate']:.6f}" if np.isfinite(final["hit_rate"]) else "",
+        "n_signals_issued": _blank_if_nan(final["n_signals_issued"]),
+        "n_signals_hold": _blank_if_nan(final["n_signals_hold"]),
+        "n_candles_backtest": _blank_if_nan(final["n_candles_backtest"]),
         "n_evals": n_evals,
         "duration_min": round((time.time() - t0) / 60.0, 2),
         "search_epochs": int(opt_cfg.get("search_epochs", 20)),
