@@ -321,7 +321,7 @@ def main() -> int:
     L.append("| Kode | " + " | ".join(str(mapping[c]) for c in FGI_CLASSES) + " |")
     L.append(
         "\nSebelumnya kode ini dibuat oleh `LabelEncoder`, yang mengurutkan kelas secara alfabetis "
-        "(*Extreme Greed* = 1, *Neutral* = 4); diperbaiki pada commit `4b230a5`.\n"
+        "(*Extreme Greed* = 1, *Neutral* = 4); diperbaiki pada commit `dfda464`.\n"
     )
     L.append(
         "**Penjajaran waktu jendela.** Fitur digeser satu langkah (`apply_anti_leakage`), sehingga "
@@ -341,7 +341,7 @@ def main() -> int:
         "hanya boleh memakai bar 1 jam terakhir yang sudah tutup saat itu. Contoh: baris 15m 10:15 "
         "(diketahui 10:30) memakai bar 1 jam 09:00 (tutup 10:00), bukan bar 10:00 yang baru tutup "
         "11:00. Penggabungan lama berdasarkan stempel mulai membocorkan hingga 45 menit data masa "
-        "depan ke `rsi_1h`, `ema_21_1h`, dan `macd_hist_1h`; diperbaiki pada commit `613e4bd`.\n"
+        "depan ke `rsi_1h`, `ema_21_1h`, dan `macd_hist_1h`; diperbaiki pada commit `37dc110`.\n"
     )
     L.append(kutip("data/preprocessor.py", r"by_close = sec\.copy\(\)", r"aligned\.index = primary_15m\.index"))
     L.append(

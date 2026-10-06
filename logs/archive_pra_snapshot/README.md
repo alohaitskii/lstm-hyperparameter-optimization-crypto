@@ -46,7 +46,7 @@ Artefak model lama dipindahkan ke `model/optimized/_archive_pra_snapshot/`
      yang tepat pada snapshot.
    - `val_auc_search` pada baris reeval disalin dari baris pencarian, sehingga
      satu baris bisa memuat dua jendela berbeda.
-2. **Pipeline berubah** sesudahnya (commit `4b230a5`, `613e4bd`): penjajaran
+2. **Pipeline berubah** sesudahnya (commit `dfda464`, `37dc110`): penjajaran
    jendela (info terbaru t−1, bukan t−2), `vol_ratio` saat SMA-20 = 0, FGI
    ordinal, dan perbaikan kebocoran fitur 1 jam (hingga 45 menit data masa
    depan). Seluruh angka di sini dihitung dengan pipeline lama.

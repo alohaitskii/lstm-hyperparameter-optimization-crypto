@@ -9,7 +9,7 @@ Yang dibuktikan:
  2. Pencatatan tidak mengubah jalannya GA: run dengan dan tanpa callback
     menghasilkan urutan evaluasi, riwayat, dan keadaan akhir rng yang identik.
  3. Bila git tersedia: GA baru identik dengan GA sebelum pencatatan
-    (commit 123930e) — urutan evaluasi, riwayat, dan keadaan akhir rng.
+    (commit 151918a) — urutan evaluasi, riwayat, dan keadaan akhir rng.
  4. Isi jejak konsisten: anak = crossover(p1, p2, mask) lalu mutasi tercatat;
     pemenang turnamen = peserta dengan fitness tertinggi; elit = peringkat atas
     generasi sebelumnya; hitungan evaluasi kumulatif = jumlah non-cache.
@@ -45,7 +45,7 @@ import optimization.genetic_algorithm as ga_new  # noqa: E402
 from optimization.search_space import GENE_ORDER, SearchSpace  # noqa: E402
 from utils.helpers import load_config  # noqa: E402
 
-REF_COMMIT = "123930e"   # GA sebelum pencatatan per individu
+REF_COMMIT = "151918a"   # GA sebelum pencatatan per individu
 GEN0_SEED42 = [
     [0, 3, 2, 1, 2, 2], [0, 2, 0, 0, 2, 2], [3, 3, 2, 3, 2, 0], [4, 1, 2, 1, 0, 2],
     [3, 2, 1, 3, 2, 1], [2, 0, 0, 2, 4, 0], [4, 3, 1, 2, 0, 2], [3, 1, 0, 3, 2, 2],

@@ -29,3 +29,15 @@ logs/*.log
 .vscode/
 *.swp
 .DS_Store
+
+# Snapshot data: data mentah Yahoo TIDAK di-commit; hanya MANIFEST.md (SHA256 + rentang)
+data/snapshot_*/*.parquet
+
+# Hasil mentah eksperimen skripsi di logs/ tetap di-commit (pengecualian logs/*.csv)
+!logs/optimization_results.csv
+!logs/optimization_folds.csv
+!logs/ga_history_*.csv
+!logs/ga_trace_*.csv
+!logs/ga_tournament_*.csv
+!logs/grid_history_*.csv
+!logs/backtest_*.csv
