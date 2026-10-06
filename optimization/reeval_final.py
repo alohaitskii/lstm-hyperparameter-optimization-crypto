@@ -86,6 +86,7 @@ from optimization.experiment import (  # noqa: E402
     prepare_ticker_data,
     resolve_output_root,
 )
+from data.fetcher import CacheMissingError, require_cached_inputs  # noqa: E402
 from utils.helpers import load_config, set_global_seed  # noqa: E402
 from utils.logger import get_logger, setup_logger  # noqa: E402
 
@@ -157,6 +158,13 @@ def main() -> int:
     output_root = resolve_output_root(cfg, None)
     master = master_csv_path(output_root)
 
+    # Cache-only: semua berkas masukan harus ada SEBELUM pekerjaan dimulai
+    try:
+        require_cached_inputs(cfg, tickers)
+    except CacheMissingError as exc:
+        console.print(f"[red]{exc}[/red]")
+        return 2
+
     sources = select_source_rows(master, tickers, methods)
     combos = [(t, m) for t in tickers for m in methods if (t, m) in sources]
     missing = [(t, m) for t in tickers for m in methods if (t, m) not in sources]
@@ -225,6 +233,8 @@ def main() -> int:
                 )
                 stop = True
                 break
+            except CacheMissingError:
+                raise  # cache hilang = snapshot tak lengkap -> hentikan semua
             except Exception as exc:  # noqa: BLE001
                 log.error(f"GAGAL {ticker} x {method} seed={seed}: {exc}")
                 continue

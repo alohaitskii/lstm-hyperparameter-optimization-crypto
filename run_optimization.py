@@ -66,6 +66,7 @@ from optimization.experiment import (  # noqa: E402
     run_pilot,
 )
 from optimization.search_space import SearchSpace  # noqa: E402
+from data.fetcher import CacheMissingError, require_cached_inputs  # noqa: E402
 from utils.helpers import ensure_dir, load_config, set_global_seed  # noqa: E402
 from utils.logger import get_logger, setup_logger  # noqa: E402
 
@@ -156,6 +157,13 @@ def main() -> int:
         return 2
     methods = list(args.methods)
 
+    # Cache-only: semua berkas masukan harus ada SEBELUM pekerjaan dimulai
+    try:
+        require_cached_inputs(cfg, tickers)
+    except CacheMissingError as exc:
+        console.print(f"[red]{exc}[/red]")
+        return 2
+
     # ---------------- Pilot mode: timing only ---------------- #
     if args.pilot:
         pilot_ticker = tickers[0] if tickers else "BTC-USD"
@@ -229,8 +237,8 @@ def main() -> int:
                     append_result(per_ticker, row)
                     rows_this_run.append(row)
                     log.info(f"CHECKPOINT: {ticker} × {method} → {master}")
-                except KeyboardInterrupt:
-                    raise
+                except (KeyboardInterrupt, CacheMissingError):
+                    raise  # cache hilang = snapshot tak lengkap -> hentikan semua
                 except Exception as exc:  # noqa: BLE001
                     log.error(f"GAGAL {ticker} × {method}: {exc}")
                 progress.advance(task)

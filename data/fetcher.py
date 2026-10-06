@@ -41,6 +41,20 @@ FGI_URL = "https://api.alternative.me/fng/"
 # Default per-request timeout for plain HTTP calls
 HTTP_TIMEOUT = 15
 
+# FGI history requested by fetch_all. A 52-day 15m window needs ~60 daily
+# values; 90 leaves margin. Shared with the cache-only preflight so both
+# always agree on the cache file name.
+FGI_LIMIT = 90
+
+
+class CacheMissingError(RuntimeError):
+    """Raised in cache-only mode when a required cache file is absent.
+
+    Cache-only mode freezes an experiment on a data snapshot. Yahoo caps 15m
+    history at 60 days, so a silent re-download would swap the dataset under
+    the experiment; failing loudly is the only safe behaviour.
+    """
+
 # Yahoo interval notation per our config timeframes
 YF_INTERVAL = {
     "1m": "1m",
@@ -78,11 +92,20 @@ YF_MAX_LOOKBACK_DAYS = {
 # --------------------------------------------------------------------------- #
 # Cache helpers
 # --------------------------------------------------------------------------- #
-def _cache_path(cache_dir: str | Path, name: str) -> Path:
+def _cache_path(cache_dir: str | Path, name: str, create: bool = True) -> Path:
     root = project_root()
     p = (root / cache_dir) if not Path(cache_dir).is_absolute() else Path(cache_dir)
-    ensure_dir(p)
+    if create:
+        ensure_dir(p)
     return p / f"{name}.parquet"
+
+
+def _ohlcv_cache_name(ticker: str, timeframe: str, limit: int) -> str:
+    return f"ohlcv_yf_{ticker.replace('-', '_')}_{timeframe}_{limit}"
+
+
+def _fgi_cache_name(limit: int) -> str:
+    return f"fgi_{limit}"
 
 
 def _cache_is_fresh(path: Path, ttl_minutes: int) -> bool:
@@ -101,6 +124,19 @@ def _save_parquet(df: pd.DataFrame, path: Path) -> None:
 
 def _load_parquet(path: Path) -> pd.DataFrame:
     return pd.read_parquet(path)
+
+
+def _load_cache_only(cache_dir: str | Path, name: str, what: str) -> pd.DataFrame:
+    """Read a cache file as-is (TTL ignored). Never downloads, never writes."""
+    path = _cache_path(cache_dir, name, create=False)
+    if not path.exists():
+        raise CacheMissingError(
+            f"Mode cache-only aktif: berkas {what} tidak ditemukan: {path}. "
+            f"Tidak mengunduh dari Yahoo/alternative.me. Periksa data.cache_dir "
+            f"atau nonaktifkan data.cache_only."
+        )
+    log.info(f"cache-only: memakai {path.name}")
+    return _load_parquet(path)
 
 
 # --------------------------------------------------------------------------- #
@@ -170,8 +206,12 @@ def fetch_ohlcv(
     cache_ttl_minutes: int = 15,
     delay_seconds: float = 0.0,
     retries: int = 3,
+    cache_only: bool = False,
 ) -> pd.DataFrame:
     """Fetch OHLCV candles from Yahoo Finance.
+
+    cache_only=True reads the cache file as-is (TTL ignored) and raises
+    CacheMissingError instead of downloading when it is absent.
 
     Returns DataFrame indexed by timestamp (UTC) with columns:
         open, high, low, close, volume
@@ -191,7 +231,10 @@ def fetch_ohlcv(
             f"Pilih salah satu: {sorted(YF_INTERVAL)}"
         )
 
-    safe_name = f"ohlcv_yf_{ticker.replace('-', '_')}_{timeframe}_{limit}"
+    safe_name = _ohlcv_cache_name(ticker, timeframe, limit)
+    if cache_only:
+        return _load_cache_only(cache_dir, safe_name, f"OHLCV {ticker} {timeframe}")
+
     cache_file = _cache_path(cache_dir, safe_name)
 
     if _cache_is_fresh(cache_file, cache_ttl_minutes):
@@ -264,9 +307,16 @@ def fetch_fear_greed_index(
     limit: int = 30,
     cache_dir: str | Path = "data/cache",
     cache_ttl_minutes: int = 60,
+    cache_only: bool = False,
 ) -> pd.DataFrame:
-    """Fetch Fear & Greed Index from alternative.me. Index = UTC date."""
-    cache_file = _cache_path(cache_dir, f"fgi_{limit}")
+    """Fetch Fear & Greed Index from alternative.me. Index = UTC date.
+
+    cache_only=True reads the cache file as-is (TTL ignored) and raises
+    CacheMissingError instead of downloading when it is absent.
+    """
+    if cache_only:
+        return _load_cache_only(cache_dir, _fgi_cache_name(limit), "Fear & Greed")
+    cache_file = _cache_path(cache_dir, _fgi_cache_name(limit))
     if _cache_is_fresh(cache_file, cache_ttl_minutes):
         log.info(f"Using cached FGI — {cache_file.name}")
         return _load_parquet(cache_file)
@@ -305,24 +355,54 @@ def fetch_all(cfg: Mapping[str, Any], ticker: str | None = None) -> dict[str, pd
         ticker = tickers[0] if tickers else d.get("ticker", "BTC-USD")
 
     delay = float(d.get("fetch_delay_seconds", 0.0))
+    cache_only = bool(d.get("cache_only", False))
 
     primary = fetch_ohlcv(
         ticker, d["primary_tf"], d["candle_limit"], d["cache_dir"],
-        d["cache_ttl_minutes"], delay_seconds=delay,
+        d["cache_ttl_minutes"], delay_seconds=delay, cache_only=cache_only,
     )
     secondary = fetch_ohlcv(
         ticker, d["secondary_tf"], d["candle_limit"], d["cache_dir"],
-        d["cache_ttl_minutes"], delay_seconds=delay,
+        d["cache_ttl_minutes"], delay_seconds=delay, cache_only=cache_only,
     )
     # FGI history should cover the whole primary window (daily index, 60d window → 90 entries)
     # Shared across all tickers — the 60-minute cache means scan/train_all hit it once.
-    fgi = fetch_fear_greed_index(90, d["cache_dir"], cache_ttl_minutes=60)
+    fgi = fetch_fear_greed_index(
+        FGI_LIMIT, d["cache_dir"], cache_ttl_minutes=60, cache_only=cache_only,
+    )
 
     return {
         "primary": primary,
         "secondary": secondary,
         "fgi": fgi,
     }
+
+
+def require_cached_inputs(cfg: Mapping[str, Any], tickers: list[str]) -> None:
+    """Cache-only preflight: verify EVERY input file exists before any work.
+
+    No-op when data.cache_only is false. Otherwise raises CacheMissingError
+    listing all missing files at once, so a gap is caught in the first second
+    of an overnight run instead of hours into it.
+    """
+    d = cfg["data"]
+    if not d.get("cache_only", False):
+        return
+    names = [
+        _ohlcv_cache_name(t, tf, d["candle_limit"])
+        for t in tickers
+        for tf in (d["primary_tf"], d["secondary_tf"])
+    ]
+    names.append(_fgi_cache_name(FGI_LIMIT))
+    paths = [_cache_path(d["cache_dir"], n, create=False) for n in names]
+    missing = [str(p) for p in paths if not p.exists()]
+    if missing:
+        raise CacheMissingError(
+            "Mode cache-only aktif, tetapi berkas berikut tidak ada:\n  "
+            + "\n  ".join(missing)
+            + "\nTidak mengunduh apa pun. Periksa data.cache_dir."
+        )
+    log.info(f"cache-only: {len(paths)} berkas masukan lengkap di {paths[0].parent}")
 
 
 if __name__ == "__main__":  # pragma: no cover
