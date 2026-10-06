@@ -111,7 +111,8 @@ def parse_args() -> argparse.Namespace:
                         "disimpan untuk seed pertama tiap kombinasi.")
     p.add_argument("--lookback", type=int, default=200,
                    help="Lookback backtest (default 200, sama seperti run asli)")
-    p.add_argument("--config", default="config.yaml", help="Path config YAML")
+    p.add_argument("--config", default="config_snapshot_20260912.yaml",
+                   help="Path config YAML (default: snapshot beku, mode cache-only)")
     return p.parse_args()
 
 
@@ -228,7 +229,7 @@ def main() -> int:
                     ticker, method, best_hp,
                     data["X"], data["y"], data["fgi_encoder"],
                     cfg, output_root, seed, args.lookback,
-                    persist_artifacts=persist,
+                    persist_artifacts=persist, bundle=data["bundle"],
                 )
             except KeyboardInterrupt:
                 console.print(

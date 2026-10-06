@@ -562,11 +562,15 @@ def main() -> int:
         "seed dilakukan oleh pemanggil.\n"
     )
     L.append(
-        "Catatan untuk Langkah 2: `set_global_seed` menyetel `random`, `numpy`, dan "
-        "`tf.random`, tetapi belum memanggil `keras.utils.set_random_seed` maupun "
-        "`tf.config.experimental.enable_op_determinism()`. Apakah ini cukup agar hasil tidak "
-        "bergantung pada posisi run dalam satu proses akan dibuktikan oleh uji determinisme "
-        "(Langkah 2b).\n"
+        "**Determinisme.** `set_global_seed` (menyetel `random`, `numpy`, dan `tf.random`) "
+        "terbukti cukup: uji `tools/uji_determinisme.py` menjalankan baseline seed 42 pada "
+        "posisi ke-1 dan ke-7 dalam satu proses, diselingi lima evaluasi lain, dan "
+        "fitness pencarian, metrik walk-forward rata-rata dan per fold, hit-rate, jumlah "
+        "sinyal, serta 200 probabilitas backtest semuanya identik bit demi bit. Hasil juga "
+        "identik antarproses. Rincian: `bahan_bab4/uji_determinisme.md`. Karena Keras 3 "
+        "mengambil seed bawaan inisialisasi dan dropout dari modul `random` Python, "
+        "`random.seed` di `set_global_seed` sudah mencakupnya; `enable_op_determinism` "
+        "tidak diperlukan pada CPU.\n"
     )
 
     OUT.parent.mkdir(parents=True, exist_ok=True)

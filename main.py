@@ -357,6 +357,7 @@ def run_backtest(
     ticker: str | None = None,
     preloaded: tuple | None = None,
     tag: str = "",
+    bundle: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Walk through the last N candles of the held-out set, generating signals
     and comparing them with the realized close N candles forward.
@@ -386,7 +387,8 @@ def run_backtest(
         )
         return None
 
-    bundle = fetch_all(cfg, ticker=ticker)
+    if bundle is None:  # CLI use; experiments pass the already-loaded bundle
+        bundle = fetch_all(cfg, ticker=ticker)
     # Rebuild features (no shift — caller controls slicing) and clean rows
     from data.preprocessor import add_target, apply_anti_leakage, build_features
 

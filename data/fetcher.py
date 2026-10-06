@@ -21,7 +21,9 @@ aborting the pipeline.
 """
 from __future__ import annotations
 
+import hashlib
 import math
+import re
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -45,6 +47,10 @@ HTTP_TIMEOUT = 15
 # values; 90 leaves margin. Shared with the cache-only preflight so both
 # always agree on the cache file name.
 FGI_LIMIT = 90
+
+
+class SnapshotMismatchError(RuntimeError):
+    """Cache-only data differs from the snapshot recorded in MANIFEST.md."""
 
 
 class CacheMissingError(RuntimeError):
@@ -126,8 +132,45 @@ def _load_parquet(path: Path) -> pd.DataFrame:
     return pd.read_parquet(path)
 
 
+_MANIFEST_CACHE: dict[Path, dict[str, dict[str, str]] | None] = {}
+
+
+def _snapshot_manifest(cache_dir: str | Path) -> dict[str, dict[str, str]] | None:
+    """{file name: {"end": last candle UTC, "sha256": hex}} from MANIFEST.md
+    in the cache directory, or None when the directory has no manifest."""
+    d = _cache_path(cache_dir, "_", create=False).parent
+    if d not in _MANIFEST_CACHE:
+        mf = d / "MANIFEST.md"
+        entries: dict[str, dict[str, str]] | None = None
+        if mf.exists():
+            entries = {}
+            for line in mf.read_text(encoding="utf-8").splitlines():
+                m = re.match(r"^\|\s*`([^`]+\.parquet)`\s*\|", line)
+                if m:
+                    cells = [c.strip() for c in line.strip().strip("|").split("|")]
+                    entries.setdefault(m.group(1), {})["end"] = cells[4]  # "Akhir (UTC)"
+                    continue
+                m = re.match(r"^([0-9a-f]{64})\s+(\S+\.parquet)$", line.strip())
+                if m:
+                    entries.setdefault(m.group(2), {})["sha256"] = m.group(1)
+        _MANIFEST_CACHE[d] = entries
+    return _MANIFEST_CACHE[d]
+
+
+def _last_stamp(df: pd.DataFrame, daily: bool) -> str:
+    """Last index value formatted like the MANIFEST "Akhir (UTC)" column."""
+    ts = df.index.max()
+    ts = ts.tz_convert("UTC") if ts.tzinfo is not None else ts
+    return ts.strftime("%Y-%m-%d" if daily else "%Y-%m-%d %H:%M")
+
+
 def _load_cache_only(cache_dir: str | Path, name: str, what: str) -> pd.DataFrame:
-    """Read a cache file as-is (TTL ignored). Never downloads, never writes."""
+    """Read a cache file as-is (TTL ignored). Never downloads, never writes.
+
+    When the cache directory carries a MANIFEST.md (a frozen snapshot), the
+    file's SHA256 and its last candle must match the manifest exactly —
+    otherwise SnapshotMismatchError.
+    """
     path = _cache_path(cache_dir, name, create=False)
     if not path.exists():
         raise CacheMissingError(
@@ -135,8 +178,22 @@ def _load_cache_only(cache_dir: str | Path, name: str, what: str) -> pd.DataFram
             f"Tidak mengunduh dari Yahoo/alternative.me. Periksa data.cache_dir "
             f"atau nonaktifkan data.cache_only."
         )
-    log.info(f"cache-only: memakai {path.name}")
-    return _load_parquet(path)
+    df = _load_parquet(path)
+    manifest = _snapshot_manifest(cache_dir)
+    if manifest is None:
+        log.warning(f"cache-only tanpa MANIFEST.md di {path.parent}: integritas tidak diverifikasi")
+        return df
+    entry = manifest.get(path.name)
+    if not entry or "sha256" not in entry or "end" not in entry:
+        raise SnapshotMismatchError(f"{path.name} tidak tercantum lengkap di MANIFEST.md")
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != entry["sha256"]:
+        raise SnapshotMismatchError(f"{path.name}: SHA256 {digest} != MANIFEST {entry['sha256']}")
+    end = _last_stamp(df, daily=name.startswith("fgi"))
+    if end != entry["end"]:
+        raise SnapshotMismatchError(f"{path.name}: candle terakhir {end} != MANIFEST {entry['end']}")
+    log.info(f"cache-only: {path.name} cocok dengan MANIFEST (SHA256, candle terakhir {end} UTC)")
+    return df
 
 
 # --------------------------------------------------------------------------- #
@@ -376,6 +433,34 @@ def fetch_all(cfg: Mapping[str, Any], ticker: str | None = None) -> dict[str, pd
         "secondary": secondary,
         "fgi": fgi,
     }
+
+
+def assert_snapshot_bundle(
+    cfg: Mapping[str, Any], ticker: str, bundle: Mapping[str, pd.DataFrame], phase: str
+) -> None:
+    """Assert that the in-memory data a phase uses ends exactly at the snapshot's
+    last candle (taken from MANIFEST.md, independent of the data itself).
+
+    No-op outside cache-only mode or when the cache has no manifest.
+    """
+    d = cfg["data"]
+    if not d.get("cache_only", False):
+        return
+    manifest = _snapshot_manifest(d["cache_dir"])
+    if manifest is None:
+        return
+    checks = [
+        ("primary", _ohlcv_cache_name(ticker, d["primary_tf"], d["candle_limit"]), False),
+        ("secondary", _ohlcv_cache_name(ticker, d["secondary_tf"], d["candle_limit"]), False),
+        ("fgi", _fgi_cache_name(FGI_LIMIT), True),
+    ]
+    for key, name, daily in checks:
+        want = manifest[f"{name}.parquet"]["end"]
+        got = _last_stamp(bundle[key], daily)
+        if got != want:
+            raise SnapshotMismatchError(
+                f"[{phase}] {ticker} {key}: candle terakhir {got} != snapshot {want}"
+            )
 
 
 def require_cached_inputs(cfg: Mapping[str, Any], tickers: list[str]) -> None:

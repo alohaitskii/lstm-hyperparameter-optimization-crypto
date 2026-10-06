@@ -32,7 +32,7 @@ from typing import Any, Mapping
 
 import numpy as np
 
-from data.fetcher import fetch_all
+from data.fetcher import assert_snapshot_bundle, fetch_all
 from data.preprocessor import (
     create_sequences,
     fit_scaler,
@@ -219,6 +219,31 @@ def _ga_history_writer(output_root: Path, ticker: str, ts: str):
     return on_generation
 
 
+# Per-individual GA trace and per-tournament log (Langkah 2a)
+GA_TRACE_FIELDS = [
+    "generation", "slot", "rank", "origin", "chromosome", "hp_json", "fitness",
+    "from_cache", "eval_count_kumulatif", "elite_from_rank",
+    "parent1_chromosome", "parent2_chromosome", "crossover_done",
+    "crossover_mask", "mutated_genes", "waktu_detik",
+]
+GA_TOURNAMENT_FIELDS = ["generation", "offspring_slot", "parent_ke", "peserta", "pemenang"]
+
+
+def _csv_appender(path: Path, fields: list[str]):
+    """Callback that appends one dict row immediately (header on first row)."""
+    ensure_dir(path.parent)
+
+    def write(row: dict[str, Any]) -> None:
+        new_file = not path.exists()
+        with open(path, "a", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=fields)
+            if new_file:
+                w.writeheader()
+            w.writerow(row)
+
+    return write
+
+
 def _grid_history_writer(output_root: Path, ticker: str, ts: str):
     """Returns an on_eval callback that appends grid rows incrementally.
 
@@ -273,7 +298,10 @@ def prepare_ticker_data(cfg: Mapping[str, Any], ticker: str) -> dict[str, Any]:
     bundle = fetch_all(cfg, ticker=ticker)
     if bundle["primary"].empty:
         raise ValueError(f"{ticker}: tidak ada data OHLCV")
+    assert_snapshot_bundle(cfg, ticker, bundle, "persiapan data (pencarian, walk-forward)")
     prepped = prepare_for_training(bundle, cfg)
+    # Kept for the backtest, so no fetch_all happens again in the middle of a run
+    prepped["bundle"] = bundle
     return prepped
 
 
@@ -289,6 +317,7 @@ def final_evaluate_and_save(
     seed: int,
     lookback: int = 200,
     persist_artifacts: bool = True,
+    bundle: Mapping[str, Any] | None = None,
 ) -> dict[str, float]:
     """Full walk-forward on best_hp, train + save winner, backtest hit-rate.
 
@@ -301,6 +330,14 @@ def final_evaluate_and_save(
     import tensorflow as tf
 
     from main import run_backtest  # deferred: main applies its own patches
+
+    # Fail fast (before minutes of training): in cache-only mode the backtest
+    # must reuse the already-loaded bundle instead of calling fetch_all again.
+    if (cfg.get("data") or {}).get("cache_only") and bundle is None:
+        raise RuntimeError(
+            "cache-only: final_evaluate_and_save membutuhkan bundle yang sudah dimuat "
+            "(backtest tidak boleh memanggil fetch_all di tengah run)"
+        )
 
     opt_cfg = cfg.get("optimization") or {}
     final_splits = int(opt_cfg.get("final_splits", 3))
@@ -367,9 +404,11 @@ def final_evaluate_and_save(
 
     # --- 4. Backtest hit-rate (reuse main.run_backtest, preloaded model) --- #
     log.info(f"[{ticker}/{method}] Backtest hit-rate (lookback={lookback})...")
+    if bundle is not None:
+        assert_snapshot_bundle(cfg, ticker, bundle, "backtest")
     bt = run_backtest(
         eval_cfg, lookback=lookback, ticker=ticker,
-        preloaded=(model, scaler, fgi_encoder), tag=method,
+        preloaded=(model, scaler, fgi_encoder), tag=method, bundle=bundle,
     )
     hit_rate = float(bt["hit_rate"]) if bt else float("nan")
     n_issued = int(bt["long"] + bt["short"]) if bt else float("nan")
@@ -409,16 +448,23 @@ def run_method(
     budget: int | None,
     lookback: int,
     ts: str,
+    bundle: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Search + final evaluation for one combination. Returns the CSV row."""
     t0 = time.time()
     opt_cfg = cfg.get("optimization") or {}
 
     if method == "ga":
+        safe = ticker_to_safe_name(ticker)
+        logs = output_root / "logs"
         res = run_ga(
             X_2d, y_1d, cfg, space, seed=seed,
             on_generation=_ga_history_writer(output_root, ticker, ts),
             budget=budget,
+            on_individual=_csv_appender(logs / f"ga_trace_{safe}_{ts}.csv", GA_TRACE_FIELDS),
+            on_tournament=_csv_appender(
+                logs / f"ga_tournament_{safe}_{ts}.csv", GA_TOURNAMENT_FIELDS
+            ),
         )
         best_hp, val_auc, n_evals = res["best_hp"], res["best_fitness"], res["n_evals"]
     elif method == "grid":
@@ -439,7 +485,7 @@ def run_method(
 
     final = final_evaluate_and_save(
         ticker, method, best_hp, X_2d, y_1d, fgi_encoder,
-        cfg, output_root, seed, lookback,
+        cfg, output_root, seed, lookback, bundle=bundle,
     )
 
     return {

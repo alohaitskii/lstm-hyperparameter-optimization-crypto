@@ -97,7 +97,8 @@ def parse_args() -> argparse.Namespace:
                    help="Lewati (ticker x metode) yang sudah ada di optimization_results.csv")
     p.add_argument("--output-root", default=None,
                    help="Root output (mis. path Google Drive). Default: repo")
-    p.add_argument("--config", default="config.yaml", help="Path config YAML")
+    p.add_argument("--config", default="config_snapshot_20260912.yaml",
+                   help="Path config YAML (default: snapshot beku, mode cache-only)")
     return p.parse_args()
 
 
@@ -225,7 +226,7 @@ def main() -> int:
                     row = run_method(
                         ticker, method, data["X"], data["y"], data["fgi_encoder"],
                         cfg, space, seed, output_root,
-                        args.budget, args.lookback, ts,
+                        args.budget, args.lookback, ts, bundle=data["bundle"],
                     )
                     append_result(master, row)   # checkpoint IMMEDIATELY
                     # per-ticker view (tabel per-koin untuk lampiran skripsi)
