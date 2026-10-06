@@ -1,0 +1,2 @@
+generation,best_fitness,mean_fitness,n_evals,best_hp_json
+0,0.558468,0.487520,10,"{""sequence_length"": 60, ""lstm_units_1"": 32, ""lstm_units_2"": 48, ""dropout_rate"": 0.1, ""learning_rate"": 0.0005, ""batch_size"": 64}"

@@ -1,0 +1,2 @@
+ticker,method,seed,best_hp_json,val_auc_search,wf_auc,wf_f1,backtest_hit_rate,n_signals_issued,n_signals_hold,n_candles_backtest,n_evals,duration_min,search_epochs,final_splits,timestamp
+LINK-USD,grid,42,"{""sequence_length"": 45, ""lstm_units_1"": 128, ""lstm_units_2"": 48, ""dropout_rate"": 0.3, ""learning_rate"": 0.0001, ""batch_size"": 32}",0.572011,0.537497,0.425411,,0,200,200,50,75.47,20,3,2026-09-11T21:20:36+00:00

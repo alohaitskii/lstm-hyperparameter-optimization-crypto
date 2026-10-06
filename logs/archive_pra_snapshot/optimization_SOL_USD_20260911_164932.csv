@@ -1,0 +1,2 @@
+ticker,method,seed,best_hp_json,val_auc_search,wf_auc,wf_f1,backtest_hit_rate,n_signals_issued,n_signals_hold,n_candles_backtest,n_evals,duration_min,search_epochs,final_splits,timestamp
+SOL-USD,grid,42,"{""sequence_length"": 30, ""lstm_units_1"": 96, ""lstm_units_2"": 32, ""dropout_rate"": 0.3, ""learning_rate"": 0.0001, ""batch_size"": 16}",0.581626,0.551443,0.386827,,0,200,200,50,70.18,20,3,2026-09-11T20:05:01+00:00

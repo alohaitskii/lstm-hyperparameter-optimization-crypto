@@ -1,0 +1,2 @@
+ticker,method,seed,best_hp_json,val_auc_search,wf_auc,wf_f1,backtest_hit_rate,n_signals_issued,n_signals_hold,n_candles_backtest,n_evals,duration_min,search_epochs,final_splits,timestamp
+ETH-USD,grid,42,"{""sequence_length"": 60, ""lstm_units_1"": 128, ""lstm_units_2"": 48, ""dropout_rate"": 0.4, ""learning_rate"": 0.001, ""batch_size"": 64}",0.633624,0.579361,0.258527,,0,200,200,50,61.7,20,3,2026-09-11T18:54:44+00:00

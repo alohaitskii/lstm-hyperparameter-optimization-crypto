@@ -1,0 +1,4 @@
+ticker,method,seed,best_hp_json,val_auc_search,wf_auc,wf_f1,backtest_hit_rate,n_evals,duration_min,search_epochs,final_splits,timestamp
+LINK-USD,ga,42,"{""sequence_length"": 120, ""lstm_units_1"": 96, ""lstm_units_2"": 48, ""dropout_rate"": 0.2, ""learning_rate"": 0.005, ""batch_size"": 32}",0.580808,0.577940,0.277364,0.586207,48,53.75,20,3,2026-07-31T05:21:10+00:00
+LINK-USD,grid,42,"{""sequence_length"": 120, ""lstm_units_1"": 32, ""lstm_units_2"": 16, ""dropout_rate"": 0.1, ""learning_rate"": 0.01, ""batch_size"": 16}",0.588579,0.579700,0.277069,0.450000,50,73.93,20,3,2026-07-31T06:35:06+00:00
+LINK-USD,manual,42,"{""sequence_length"": 60, ""lstm_units_1"": 128, ""lstm_units_2"": 64, ""dropout_rate"": 0.2, ""learning_rate"": 0.001, ""batch_size"": 32}",0.562372,0.570252,0.228089,,1,4.39,20,3,2026-07-31T06:39:29+00:00

@@ -1,0 +1,4 @@
+ticker,method,seed,best_hp_json,val_auc_search,wf_auc,wf_f1,backtest_hit_rate,n_evals,duration_min,search_epochs,final_splits,timestamp
+SOL-USD,ga,42,"{""sequence_length"": 120, ""lstm_units_1"": 64, ""lstm_units_2"": 48, ""dropout_rate"": 0.2, ""learning_rate"": 0.01, ""batch_size"": 32}",0.626280,0.545839,0.199537,,49,39.31,20,3,2026-07-31T03:20:30+00:00
+SOL-USD,grid,42,"{""sequence_length"": 120, ""lstm_units_1"": 96, ""lstm_units_2"": 32, ""dropout_rate"": 0.3, ""learning_rate"": 0.001, ""batch_size"": 16}",0.614905,0.561376,0.026803,,50,62.29,20,3,2026-07-31T04:22:47+00:00
+SOL-USD,manual,42,"{""sequence_length"": 60, ""lstm_units_1"": 128, ""lstm_units_2"": 64, ""dropout_rate"": 0.2, ""learning_rate"": 0.001, ""batch_size"": 32}",0.547078,0.577926,0.278258,0.811966,1,4.51,20,3,2026-07-31T04:27:17+00:00

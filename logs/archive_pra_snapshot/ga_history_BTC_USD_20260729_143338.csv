@@ -1,0 +1,4 @@
+generation,best_fitness,mean_fitness,n_evals,best_hp_json
+0,0.517852,0.496546,4,"{""sequence_length"": 30, ""lstm_units_1"": 96, ""lstm_units_2"": 16, ""dropout_rate"": 0.1, ""learning_rate"": 0.001, ""batch_size"": 64}"
+1,0.558689,0.527418,6,"{""sequence_length"": 30, ""lstm_units_1"": 128, ""lstm_units_2"": 48, ""dropout_rate"": 0.1, ""learning_rate"": 0.005, ""batch_size"": 64}"
+2,0.571612,0.541828,8,"{""sequence_length"": 30, ""lstm_units_1"": 96, ""lstm_units_2"": 48, ""dropout_rate"": 0.1, ""learning_rate"": 0.001, ""batch_size"": 64}"

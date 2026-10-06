@@ -1,0 +1,2 @@
+ticker,method,seed,best_hp_json,val_auc_search,wf_auc,wf_f1,backtest_hit_rate,n_signals_issued,n_signals_hold,n_candles_backtest,n_evals,duration_min,search_epochs,final_splits,timestamp
+SHIB-USD,grid,42,"{""sequence_length"": 120, ""lstm_units_1"": 128, ""lstm_units_2"": 64, ""dropout_rate"": 0.1, ""learning_rate"": 0.0001, ""batch_size"": 32}",0.612779,0.527837,0.213383,0.265060,83,117,200,50,99.82,20,3,2026-09-11T23:00:32+00:00
