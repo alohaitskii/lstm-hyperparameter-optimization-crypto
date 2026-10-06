@@ -8,7 +8,9 @@ Pipeline overview:
   5. split_chronological()— chronological train/val/test split (no shuffle)
 
 Technical indicators are computed natively (data/indicators.py) — no pandas-ta.
-All operations preserve UTC timestamps. No future data leaks into features.
+All operations preserve UTC timestamps. No future data leaks into features:
+every input is aligned by the moment it becomes known (bar CLOSE time), and
+test_penjajaran.py proves it by perturbing everything not yet known at t.
 """
 from __future__ import annotations
 
@@ -125,8 +127,28 @@ def _add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def _add_1h_features(primary_15m: pd.DataFrame, secondary_1h: pd.DataFrame) -> pd.DataFrame:
-    """Compute 1h trend indicators and broadcast (forward-fill) to the 15m index."""
+def _bar_duration(tf: str) -> pd.Timedelta:
+    """'15m' / '1h' / '1d' -> bar duration."""
+    unit = {"m": "min", "h": "h", "d": "D"}[tf[-1]]
+    return pd.Timedelta(int(tf[:-1]), unit=unit)
+
+
+def _add_1h_features(
+    primary_15m: pd.DataFrame,
+    secondary_1h: pd.DataFrame,
+    primary_bar: pd.Timedelta = pd.Timedelta(minutes=15),
+    secondary_bar: pd.Timedelta = pd.Timedelta(hours=1),
+) -> pd.DataFrame:
+    """Compute 1h trend indicators and align them to the 15m index WITHOUT look-ahead.
+
+    Yahoo stamps bars with their START time: the 1h bar stamped h aggregates
+    the 15m bars h, h+15, h+30, h+45 (verified on the snapshot: its close equals
+    the close of 15m bar h+45) and is only known when it closes at h+1h. A 15m
+    row r is known when it closes at r+15m. Each 15m row therefore takes the
+    latest 1h bar with h + 1h <= r + 15m. Joining on start stamps — the old
+    behaviour — fed rows :00/:15/:30 a 1h bar closing up to 45 minutes in
+    their future.
+    """
     if secondary_1h.empty:
         log.warning("Secondary (1h) frame empty — confirmation features filled with NaN")
         out = primary_15m.copy()
@@ -142,8 +164,12 @@ def _add_1h_features(primary_15m: pd.DataFrame, secondary_1h: pd.DataFrame) -> p
     sec["macd_hist_1h"] = macd_hist_1h
 
     sec = sec[["rsi_1h", "ema_21_1h", "macd_hist_1h"]]
-    merged = primary_15m.join(sec.reindex(primary_15m.index, method="ffill"))
-    return merged
+    by_close = sec.copy()
+    by_close.index = by_close.index + secondary_bar      # when each 1h bar is known
+    known_at = primary_15m.index + primary_bar            # when each 15m row is known
+    aligned = by_close.reindex(known_at, method="ffill")
+    aligned.index = primary_15m.index
+    return primary_15m.join(aligned)
 
 
 # --------------------------------------------------------------------------- #
@@ -211,7 +237,11 @@ def build_features(
         raise ValueError("Primary OHLCV is empty — cannot build features.")
 
     df = _add_indicators(primary)
-    df = _add_1h_features(df, bundle["secondary"])
+    d = cfg["data"]
+    df = _add_1h_features(
+        df, bundle["secondary"],
+        _bar_duration(d["primary_tf"]), _bar_duration(d["secondary_tf"]),
+    )
     df, encoder = _merge_fgi(df, bundle["fgi"], encoder=fgi_encoder)
 
     # Guarantee every model column exists (missing sources → NaN, logged)
