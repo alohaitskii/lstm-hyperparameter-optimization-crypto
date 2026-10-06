@@ -253,6 +253,7 @@ def main() -> int:
                 "val_auc_search": src.get("val_auc_search", ""),
                 "n_evals": src.get("n_evals", ""),
                 "duration_min": src.get("duration_min", ""),
+                "search_duration_min": src.get("search_duration_min", ""),
                 "search_epochs": src.get("search_epochs", ""),
                 "final_splits": src.get("final_splits", ""),
                 # --- dihitung ulang ---

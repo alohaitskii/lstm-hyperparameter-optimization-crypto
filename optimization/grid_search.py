@@ -50,7 +50,8 @@ def run_grid(
         auc = res["auc"]
         fit = float(auc) if np.isfinite(auc) else 0.0
 
-        row = {"eval": n_evals, "fitness": fit, "hp": hp}
+        row = {"eval": n_evals, "fitness": fit, "hp": hp,
+               "waktu_detik": round(float(res["duration"]), 2)}
         history.append(row)
         if on_eval is not None:
             on_eval(row)

@@ -60,7 +60,9 @@ RESULT_FIELDS = [
     # jumlah sinyal wajib dicatat agar hit-rate antarmetode bisa dibandingkan
     # secara adil (model konservatif otomatis terlihat lebih baik tanpa ini).
     "n_signals_issued", "n_signals_hold", "n_candles_backtest",
-    "n_evals", "duration_min",
+    # duration_min = pencarian + evaluasi akhir; search_duration_min = pencarian
+    # saja (pembanding efisiensi GA vs Grid yang adil)
+    "n_evals", "duration_min", "search_duration_min",
     "search_epochs", "final_splits", "timestamp",
 ]
 
@@ -262,13 +264,14 @@ def _grid_history_writer(output_root: Path, ticker: str, ts: str):
         with open(path, "a", encoding="utf-8", newline="") as f:
             w = csv.writer(f)
             if new_file:
-                w.writerow(["eval", "fitness", "best_so_far", "hp_json"])
+                w.writerow(["eval", "fitness", "best_so_far", "hp_json", "waktu_detik"])
             w.writerow(
                 [
                     row["eval"],
                     f"{row['fitness']:.6f}",
                     f"{best_so_far:.6f}",
                     json.dumps(row["hp"]),
+                    row.get("waktu_detik", ""),
                 ]
             )
 
@@ -467,15 +470,18 @@ def run_method(
             ),
         )
         best_hp, val_auc, n_evals = res["best_hp"], res["best_fitness"], res["n_evals"]
+        search_s = float(res["duration"])
     elif method == "grid":
         res = run_grid(
             X_2d, y_1d, cfg, space, seed=seed, budget=budget,
             on_eval=_grid_history_writer(output_root, ticker, ts),
         )
         best_hp, val_auc, n_evals = res["best_hp"], res["best_fitness"], res["n_evals"]
+        search_s = float(res["duration"])
     elif method == "manual":
         best_hp = manual_hp_from_cfg(cfg)
         r = evaluate(best_hp, X_2d, y_1d, cfg, seed=seed)
+        search_s = float(r["duration"])
         val_auc = float(r["auc"]) if np.isfinite(r["auc"]) else 0.0
         n_evals = 1
     else:
@@ -504,6 +510,7 @@ def run_method(
         "n_candles_backtest": _blank_if_nan(final["n_candles_backtest"]),
         "n_evals": n_evals,
         "duration_min": round((time.time() - t0) / 60.0, 2),
+        "search_duration_min": round(search_s / 60.0, 2),
         "search_epochs": int(opt_cfg.get("search_epochs", 20)),
         "final_splits": int(opt_cfg.get("final_splits", 3)),
         "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
