@@ -80,8 +80,10 @@ import main as _main  # noqa: E402, F401
 from optimization.experiment import (  # noqa: E402
     METHODS,
     _blank_if_nan,
+    append_fold_rows,
     append_result,
     final_evaluate_and_save,
+    folds_csv_path,
     master_csv_path,
     prepare_ticker_data,
     resolve_output_root,
@@ -157,6 +159,7 @@ def main() -> int:
     methods = list(args.methods)
     output_root = resolve_output_root(cfg, None)
     master = master_csv_path(output_root)
+    folds_path = folds_csv_path(output_root)
 
     # Cache-only: semua berkas masukan harus ada SEBELUM pekerjaan dimulai
     try:
@@ -263,6 +266,8 @@ def main() -> int:
                 "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             }
             append_result(master, row)
+            append_fold_rows(folds_path, ticker, method, seed,
+                             final.get("folds", []), row["timestamp"])
             results.append(row)
             console.print(
                 f"    auc={row['wf_auc'][:6] or '-'} f1={row['wf_f1'][:6] or '-'} "
@@ -277,6 +282,7 @@ def main() -> int:
         f"total {((time.time() - t_start) / 60):.1f} menit"
     )
     console.print(f"Baris baru di-append ke: {master}")
+    console.print(f"Metrik per fold di-append ke: {folds_path}")
     return 0
 
 

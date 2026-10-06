@@ -65,6 +65,48 @@ RESULT_FIELDS = [
 ]
 
 
+# One row per (ticker, method, seed, fold) of every final evaluation
+FOLD_FIELDS = [
+    "ticker", "method", "seed", "fold",
+    "accuracy", "precision", "recall", "f1", "auc",
+    "n_train_seq", "n_val_seq", "pct_label1_train", "pct_label1_val",
+    "timestamp",
+]
+
+
+def folds_csv_path(output_root: Path) -> Path:
+    """Stable append-only file with the per-fold walk-forward metrics."""
+    return output_root / "logs" / "optimization_folds.csv"
+
+
+def append_fold_rows(
+    path: Path, ticker: str, method: str, seed: int,
+    folds: list[dict[str, Any]], timestamp: str,
+) -> None:
+    """Append the fold rows of one final evaluation (checkpoint granularity)."""
+    def f6(v: Any) -> str:
+        v = float(v)
+        return f"{v:.6f}" if np.isfinite(v) else ""
+
+    ensure_dir(path.parent)
+    new_file = not path.exists()
+    with open(path, "a", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=FOLD_FIELDS)
+        if new_file:
+            w.writeheader()
+        for r in folds:
+            w.writerow({
+                "ticker": ticker, "method": method, "seed": seed,
+                "fold": int(r["fold"]),
+                **{k: f6(r[k]) for k in ("accuracy", "precision", "recall", "f1", "auc")},
+                "n_train_seq": int(r["n_train_seq"]),
+                "n_val_seq": int(r["n_val_seq"]),
+                "pct_label1_train": f"{100.0 * float(r['pos_rate_train']):.4f}",
+                "pct_label1_val": f"{100.0 * float(r['pos_rate_val']):.4f}",
+                "timestamp": timestamp,
+            })
+
+
 def _blank_if_nan(v: Any) -> Any:
     """CSV-friendly: NaN → string kosong, selain itu nilai apa adanya."""
     try:
@@ -280,6 +322,10 @@ def final_evaluate_and_save(
             wf_f1 = float(mean_row["f1"].iloc[0])
             wf_precision = float(mean_row["precision"].iloc[0])
             wf_recall = float(mean_row["recall"].iloc[0])
+    fold_rows: list[dict[str, Any]] = (
+        report[~report["fold"].isin(["MEAN", "STD"])].to_dict("records")
+        if not report.empty else []
+    )
 
     # --- 2. Train the winning model (chronological split, like run_train) -- #
     log.info(f"[{ticker}/{method}] Training model pemenang...")
@@ -339,6 +385,7 @@ def final_evaluate_and_save(
         "wf_f1": wf_f1,
         "wf_precision": wf_precision,
         "wf_recall": wf_recall,
+        "folds": fold_rows,
         "hit_rate": hit_rate,
         "n_signals_issued": n_issued,
         "n_signals_hold": n_hold,

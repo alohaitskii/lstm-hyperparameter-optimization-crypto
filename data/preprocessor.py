@@ -4,7 +4,7 @@ Pipeline overview:
   1. build_features()     — 25-feature matrix (OHLCV + technicals + 1h confirm + sentiment)
   2. add_target()         — binary direction label (LOOKAHEAD_N candles ahead)
   3. apply_anti_leakage() — shift features by 1, drop NaN rows
-  4. create_sequences()   — slide window of length SEQUENCE_LENGTH
+  4. create_sequences()   — every window sequence_window(i) = rows i-L+1 .. i
   5. split_chronological()— chronological train/val/test split (no shuffle)
 
 Technical indicators are computed natively (data/indicators.py) — no pandas-ta.
@@ -42,7 +42,37 @@ FEATURE_COLUMNS: list[str] = [
     "fgi_normalized", "fgi_classification_encoded",
 ]
 
-# Canonical FGI classification labels (so the encoder is reproducible)
+# Explicit ordinal FGI codes in sentiment order. NOT sklearn's LabelEncoder,
+# which sorts classes alphabetically (Extreme Greed=1, Neutral=4) and so
+# imposes a meaningless order on a feature the model treats as a number.
+FGI_ORDINAL: dict[str, int] = {
+    "Extreme Fear": 0,
+    "Fear": 1,
+    "Neutral": 2,
+    "Greed": 3,
+    "Extreme Greed": 4,
+}
+FGI_UNKNOWN_CODE = -1
+
+
+class FGIOrdinalEncoder:
+    """Explicit ordinal FGI encoder.
+
+    Pickled with the model artifacts (fgi_encoder.pkl), so training, backtest
+    and inference provably apply the same mapping.
+    """
+
+    def __init__(self, mapping: Mapping[str, int] | None = None) -> None:
+        self.mapping: dict[str, int] = dict(mapping or FGI_ORDINAL)
+
+    def encode(self, label: str) -> int:
+        return self.mapping.get(label, FGI_UNKNOWN_CODE)
+
+    def __repr__(self) -> str:
+        return f"FGIOrdinalEncoder({self.mapping})"
+
+
+# Canonical FGI classification labels, in sentiment order
 FGI_CLASSES = [
     "Extreme Fear",
     "Fear",
@@ -84,7 +114,13 @@ def _add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     out["stoch_d"] = stoch_d
 
     out["vol_sma_20"] = ind.sma(out["volume"], length=20)
-    out["vol_ratio"] = out["volume"] / out["vol_sma_20"].replace(0.0, np.nan)
+    # Yahoo reports volume 0 for many 15m crypto candles. When the 20-candle
+    # SMA is 0 the current volume is 0 as well, so the ratio is defined as 0
+    # instead of left undefined: a NaN here would drop the row and the
+    # remaining rows would no longer be 15 minutes apart. No other imputation;
+    # warm-up rows (SMA still NaN) stay NaN.
+    sma = out["vol_sma_20"]
+    out["vol_ratio"] = (out["volume"] / sma.replace(0.0, np.nan)).where(sma != 0.0, 0.0)
 
     return out
 
@@ -113,12 +149,25 @@ def _add_1h_features(primary_15m: pd.DataFrame, secondary_1h: pd.DataFrame) -> p
 # --------------------------------------------------------------------------- #
 # Sentiment merging
 # --------------------------------------------------------------------------- #
+def _encode_fgi(enc: Any, label: str) -> int:
+    """Code one FGI class with the given encoder.
+
+    New models carry FGIOrdinalEncoder. Artifacts trained before the ordinal
+    fix carry a sklearn LabelEncoder; it is still honoured so those models are
+    fed exactly the (alphabetical) codes they were trained on.
+    """
+    if isinstance(enc, FGIOrdinalEncoder):
+        return enc.encode(label)
+    classes = set(enc.classes_.tolist())
+    return int(enc.transform([label])[0]) if label in classes else FGI_UNKNOWN_CODE
+
+
 def _merge_fgi(
-    df: pd.DataFrame, fgi: pd.DataFrame, encoder: LabelEncoder | None = None
-) -> tuple[pd.DataFrame, LabelEncoder]:
+    df: pd.DataFrame, fgi: pd.DataFrame, encoder: Any = None
+) -> tuple[pd.DataFrame, Any]:
     """Broadcast daily FGI value+classification across the intraday index."""
     out = df.copy()
-    enc = encoder or _fit_fgi_encoder()
+    enc = encoder if encoder is not None else _fit_fgi_encoder()
 
     if fgi.empty:
         out["fgi_normalized"] = np.nan
@@ -128,10 +177,9 @@ def _merge_fgi(
     fgi_local = fgi.copy()
     fgi_local["fgi_normalized"] = fgi_local["fgi_value"] / 100.0
 
-    # safe_transform: unknown labels → -1
-    classes_set = set(enc.classes_.tolist())
+    # Unknown labels → FGI_UNKNOWN_CODE (-1)
     fgi_local["fgi_classification_encoded"] = fgi_local["fgi_classification"].apply(
-        lambda v: enc.transform([v])[0] if v in classes_set else -1
+        lambda v: _encode_fgi(enc, v)
     )
 
     fgi_features = fgi_local[["fgi_normalized", "fgi_classification_encoded"]]
@@ -144,10 +192,9 @@ def _merge_fgi(
     return out, enc
 
 
-def _fit_fgi_encoder() -> LabelEncoder:
-    enc = LabelEncoder()
-    enc.fit(FGI_CLASSES)
-    return enc
+def _fit_fgi_encoder() -> FGIOrdinalEncoder:
+    """Encoder for new models: explicit ordinal mapping (name kept for callers)."""
+    return FGIOrdinalEncoder()
 
 
 # --------------------------------------------------------------------------- #
@@ -156,8 +203,8 @@ def _fit_fgi_encoder() -> LabelEncoder:
 def build_features(
     bundle: Mapping[str, pd.DataFrame],
     cfg: Mapping[str, Any],
-    fgi_encoder: LabelEncoder | None = None,
-) -> tuple[pd.DataFrame, LabelEncoder]:
+    fgi_encoder: Any = None,
+) -> tuple[pd.DataFrame, Any]:
     """Build the full feature matrix from a fetched data bundle."""
     primary = bundle["primary"].copy()
     if primary.empty:
@@ -214,21 +261,37 @@ def apply_anti_leakage(df: pd.DataFrame, target_col: str = "target") -> pd.DataF
     return out
 
 
+def sequence_window(X: np.ndarray, i: int, sequence_length: int) -> np.ndarray:
+    """Input window for the target at row i: rows i-L+1 .. i, row i INCLUDED.
+
+    After apply_anti_leakage row i holds the values of candle i-1, so for
+    target y(t) the newest information in the window is candle t-1 — exactly
+    one step of shift. This is the ONLY window definition in the project:
+    search, walk-forward, the winning model, the backtest and live inference
+    all go through it.
+    """
+    if i < sequence_length - 1 or i >= len(X):
+        raise IndexError(
+            f"window for row {i} needs rows {i - sequence_length + 1}..{i} of {len(X)}"
+        )
+    return X[i - sequence_length + 1 : i + 1]
+
+
 def create_sequences(
     X: np.ndarray, y: np.ndarray, sequence_length: int
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Slide a window of length `sequence_length` over rows.
+    """All windows of a part with their targets: n - L + 1 samples.
 
-    For each window ending at row i, target is y[i].
+    Sample k = sequence_window(X, k + L - 1) paired with y[k + L - 1].
     Output shape: (n_samples, sequence_length, n_features), (n_samples,)
     """
-    if len(X) <= sequence_length:
+    first = sequence_length - 1
+    if len(X) <= first:
         return np.empty((0, sequence_length, X.shape[1])), np.empty((0,))
 
-    xs, ys = [], []
-    for i in range(sequence_length, len(X)):
-        xs.append(X[i - sequence_length : i])
-        ys.append(y[i])
+    rows = range(first, len(X))
+    xs = [sequence_window(X, i, sequence_length) for i in rows]
+    ys = [y[i] for i in rows]
     return np.asarray(xs, dtype=np.float32), np.asarray(ys, dtype=np.float32)
 
 
@@ -274,7 +337,7 @@ def load_scaler(path: str | Path) -> MinMaxScaler:
         return pickle.load(f)
 
 
-def save_fgi_encoder(encoder: LabelEncoder, path: str | Path) -> None:
+def save_fgi_encoder(encoder: Any, path: str | Path) -> None:
     p = Path(path)
     if not p.is_absolute():
         p = project_root() / p
@@ -284,7 +347,7 @@ def save_fgi_encoder(encoder: LabelEncoder, path: str | Path) -> None:
     log.info(f"FGI encoder saved → {p}")
 
 
-def load_fgi_encoder(path: str | Path) -> LabelEncoder:
+def load_fgi_encoder(path: str | Path) -> Any:
     p = Path(path)
     if not p.is_absolute():
         p = project_root() / p
@@ -324,12 +387,13 @@ def prepare_for_prediction(
     bundle: Mapping[str, pd.DataFrame],
     cfg: Mapping[str, Any],
     scaler: MinMaxScaler,
-    fgi_encoder: LabelEncoder,
+    fgi_encoder: Any,
 ) -> dict[str, Any]:
     """Build features for inference. Returns the last sequence + the most recent feature row.
 
-    Note: for prediction we do NOT shift features by 1 — we want the latest
-    observable state of the world up to and including the most recent closed candle.
+    Inference uses UNSHIFTED features. Unshifted row T equals shifted row T+1,
+    so the window below is sequence_window for the next target y(T+1): the same
+    alignment the model was trained on, with candle T as newest information.
     """
     feats_cfg = cfg["features"]
     seq_len = feats_cfg["sequence_length"]
@@ -343,9 +407,8 @@ def prepare_for_prediction(
             f"Not enough clean rows ({len(feat_only)}) to build sequence of length {seq_len}"
         )
 
-    latest_window_2d = feat_only.tail(seq_len).values.astype(np.float32)
-    latest_window_scaled = scaler.transform(latest_window_2d).astype(np.float32)
-    X_seq = latest_window_scaled.reshape(1, seq_len, len(FEATURE_COLUMNS))
+    scaled = scaler.transform(feat_only.values.astype(np.float32)).astype(np.float32)
+    X_seq = sequence_window(scaled, len(scaled) - 1, seq_len)[np.newaxis, ...]
 
     latest_features_row = feat_df.iloc[-1].to_dict()
     latest_timestamp = feat_df.index[-1]

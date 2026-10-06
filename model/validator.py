@@ -116,6 +116,10 @@ def walk_forward_validate(
         m["fold"] = fold_idx
         m["train_rows"] = len(train_idx)
         m["val_rows"] = len(val_idx)
+        m["n_train_seq"] = len(y_train_seq)
+        m["n_val_seq"] = len(y_val_seq)
+        m["pos_rate_train"] = float(np.mean(y_train_seq))
+        m["pos_rate_val"] = float(np.mean(y_val_seq))
         fold_records.append(m)
 
     if not fold_records:
@@ -132,7 +136,10 @@ def walk_forward_validate(
             **{c: agg[c] for c in metric_cols},
         }
     )
-    out = pd.concat([df[["fold", *metric_cols]], summary], ignore_index=True)
+    # Per-fold bookkeeping (blank on the MEAN/STD rows)
+    info_cols = ["train_rows", "val_rows", "n_train_seq", "n_val_seq",
+                 "pos_rate_train", "pos_rate_val"]
+    out = pd.concat([df[["fold", *metric_cols, *info_cols]], summary], ignore_index=True)
     return out
 
 

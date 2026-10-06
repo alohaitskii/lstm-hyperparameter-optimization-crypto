@@ -61,6 +61,7 @@ from data.preprocessor import (  # noqa: E402
     fit_scaler,
     prepare_for_prediction,
     prepare_for_training,
+    sequence_window,
     split_chronological,
 )
 from model.lstm_model import (  # noqa: E402
@@ -393,11 +394,12 @@ def run_backtest(
     labeled = add_target(feat_df, lookahead_n, move_threshold)
     clean = apply_anti_leakage(labeled[FEATURE_COLUMNS + ["target"]])
 
-    if len(clean) < seq_len + lookback:
+    n_windows = len(clean) - seq_len + 1
+    if n_windows < lookback:
         log.warning(
             f"Insufficient clean rows ({len(clean)}) for backtest of lookback={lookback}. Reducing."
         )
-        lookback = max(0, len(clean) - seq_len - 1)
+        lookback = max(0, n_windows)
 
     X_2d = clean[FEATURE_COLUMNS].values.astype(np.float32)
     y_1d = clean["target"].values.astype(np.float32)
@@ -413,13 +415,14 @@ def run_backtest(
     hold_signals = 0
 
     end_anchor = len(scaled)
-    start_anchor = max(seq_len, end_anchor - lookback)
+    start_anchor = max(seq_len - 1, end_anchor - lookback)
 
     for i in range(start_anchor, end_anchor):
-        window = scaled[i - seq_len : i].reshape(1, seq_len, scaled.shape[1])
+        # Same window definition as training (rows i-L+1 .. i)
+        window = sequence_window(scaled, i, seq_len)[np.newaxis, ...]
 
-        # Build a "latest_features" snapshot from the row at i (post anti-leakage,
-        # so this represents observable state at time i)
+        # Confirmation gates read row i — the window's last row, i.e. the
+        # newest information the model sees (candle i-1 after the shift)
         snapshot = clean.iloc[i].to_dict()
         signal = predict_signal(model, window, snapshot, cfg)
         prob = signal["model_probability"]
