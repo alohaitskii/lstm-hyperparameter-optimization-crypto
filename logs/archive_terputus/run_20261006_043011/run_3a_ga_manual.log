@@ -1,0 +1,589 @@
+===== MULAI 2026-10-06 04:30:07 UTC | cegah tidur: ya | C:\LSTM Crypto\binance_lstm_futures\venv\Scripts\python.exe run_optimization.py --methods ga manual
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1791261009.401002   13200 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1791261010.811504   13200 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[2026-10-06 11:30:11] INFO     Seed global: 42                                 
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+                      INFO     GPU terdeteksi: TIDAK ADA (CPU)                 
+                      INFO     Ruang pencarian: 4800 kombinasi (6 gen)         
+                      INFO     Output root: C:\LSTM Crypto\binance_lstm_futures
+                      INFO     cache-only: 11 berkas masukan lengkap di C:\LSTM
+                               Crypto\binance_lstm_futures\data\snapshot_202609
+                               12                                              
+Eksperimen: 5 ticker × ['ga', 'manual'] → 10 kombinasi berjalan
+
+                      INFO     cache-only: ohlcv_yf_BTC_USD_15m_5000.parquet   
+                               cocok dengan MANIFEST (SHA256, candle terakhir  
+                               2026-09-12 05:30 UTC)                           
+                      INFO     cache-only: ohlcv_yf_BTC_USD_1h_5000.parquet    
+                               cocok dengan MANIFEST (SHA256, candle terakhir  
+                               2026-09-12 05:00 UTC)                           
+                      INFO     cache-only: fgi_90.parquet cocok dengan MANIFEST
+                               (SHA256, candle terakhir 2026-09-12 UTC)        
+                      INFO     Feature matrix built — shape=(5000, 27), model  
+                               columns=25                                      
+                      INFO     Anti-leakage applied. Rows after dropna: 4946   
+                      INFO     GA start: pop=10, gen=6, tournament=3, cx=0.8,  
+                               mut=0.15, elit=2, seed=42                       
+                      INFO     Class weights (balanced): {0: 0.577116935483871,
+                               1: 3.741830065359477}                           
+WARNING:tensorflow:From C:\LSTM Crypto\binance_lstm_futures\venv\Lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+[2026-10-06 11:30:40] INFO     Class weights (balanced): {0: 0.577116935483871,
+                               1: 3.741830065359477}                           
+[2026-10-06 11:30:54] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:32:14] INFO     Class weights (balanced): {0:                   
+                               0.5783195020746889, 1: 3.69205298013245}        
+[2026-10-06 11:33:11] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:34:28] INFO     Class weights (balanced): {0:                   
+                               0.5779022403258656, 1: 3.7091503267973858}      
+[2026-10-06 11:35:40] INFO     Class weights (balanced): {0:                   
+                               0.5783195020746889, 1: 3.69205298013245}        
+[2026-10-06 11:36:50] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:37:35] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:39:09] INFO     Class weights (balanced): {0:                   
+                               0.5779022403258656, 1: 3.7091503267973858}      
+[2026-10-06 11:39:27] INFO     GA gen 0/6: best=0.6316 mean=0.5934 evals=10    
+                      INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:40:51] INFO     Class weights (balanced): {0:                   
+                               0.5783195020746889, 1: 3.69205298013245}        
+[2026-10-06 11:41:52] INFO     Class weights (balanced): {0: 0.577116935483871,
+                               1: 3.741830065359477}                           
+[2026-10-06 11:42:08] INFO     Class weights (balanced): {0:                   
+                               0.5783195020746889, 1: 3.69205298013245}        
+[2026-10-06 11:45:46] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:46:35] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:48:19] INFO     GA gen 1/6: best=0.6701 mean=0.6158 evals=16    
+                      INFO     Class weights (balanced): {0:                   
+                               0.5783195020746889, 1: 3.69205298013245}        
+[2026-10-06 11:49:53] INFO     Class weights (balanced): {0:                   
+                               0.5783195020746889, 1: 3.69205298013245}        
+[2026-10-06 11:52:13] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:53:14] INFO     Class weights (balanced): {0:                   
+                               0.5783195020746889, 1: 3.69205298013245}        
+[2026-10-06 11:54:22] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:55:33] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:56:44] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:57:51] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 11:59:23] INFO     GA gen 2/6: best=0.6770 mean=0.6352 evals=24    
+                      INFO     Class weights (balanced): {0: 0.577116935483871,
+                               1: 3.741830065359477}                           
+[2026-10-06 11:59:49] INFO     Class weights (balanced): {0:                   
+                               0.5775075987841946, 1: 3.7254901960784315}      
+[2026-10-06 12:00:19] INFO     Class weights (balanced): {0:                   
+                               0.5779022403258656, 1: 3.7091503267973858}      
+[2026-10-06 12:01:32] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:03:28] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:05:25] INFO     GA gen 3/6: best=0.6770 mean=0.6402 evals=29    
+                      INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:06:30] INFO     Class weights (balanced): {0:                   
+                               0.5779022403258656, 1: 3.7091503267973858}      
+[2026-10-06 12:07:12] INFO     Class weights (balanced): {0:                   
+                               0.5775075987841946, 1: 3.7254901960784315}      
+[2026-10-06 12:07:41] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:08:30] INFO     Class weights (balanced): {0:                   
+                               0.5779022403258656, 1: 3.7091503267973858}      
+[2026-10-06 12:09:16] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:10:07] INFO     GA gen 4/6: best=0.6770 mean=0.6354 evals=35    
+                      INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:11:00] INFO     Class weights (balanced): {0:                   
+                               0.5775075987841946, 1: 3.7254901960784315}      
+[2026-10-06 12:11:59] INFO     Class weights (balanced): {0:                   
+                               0.5779022403258656, 1: 3.7091503267973858}      
+[2026-10-06 12:13:39] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:15:05] INFO     Class weights (balanced): {0:                   
+                               0.5775075987841946, 1: 3.7254901960784315}      
+[2026-10-06 12:15:38] INFO     Class weights (balanced): {0:                   
+                               0.5783195020746889, 1: 3.69205298013245}        
+[2026-10-06 12:17:01] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:17:49] INFO     GA gen 5/6: best=0.6770 mean=0.6320 evals=42    
+                      INFO     Class weights (balanced): {0:                   
+                               0.5779022403258656, 1: 3.7091503267973858}      
+[2026-10-06 12:19:47] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:21:12] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:22:09] INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:23:42] INFO     GA gen 6/6: best=0.6770 mean=0.6524 evals=46    
+                      INFO     [BTC-USD/ga] best_hp={'sequence_length': 90,    
+                               'lstm_units_1': 64, 'lstm_units_2': 16,         
+                               'dropout_rate': 0.1, 'learning_rate': 0.01,     
+                               'batch_size': 32} val_auc=0.6770 n_evals=46     
+                      INFO     [BTC-USD/ga] Walk-forward final (3 fold)...     
+                      INFO     === Fold 1/3 ===                                
+                      INFO     Train rows: 1238, Val rows: 1236                
+                      INFO     Fold 1 sequences — train: (1149, 90, 25), val:  
+                               (1147, 90, 25)                                  
+                      INFO     Class weights (balanced): {0:                   
+                               0.5577669902912621, 1: 4.8277310924369745}      
+Epoch 1/100
+36/36 - 4s - 123ms/step - accuracy: 0.6188 - auc: 0.6137 - loss: 0.7098 - precision: 0.1416 - recall: 0.5294 - val_accuracy: 0.9180 - val_auc: 0.4974 - val_loss: 0.6625 - val_precision: 0.1034 - val_recall: 0.0423 - learning_rate: 0.0100
+Epoch 2/100
+36/36 - 2s - 42ms/step - accuracy: 0.5692 - auc: 0.6088 - loss: 0.7015 - precision: 0.1371 - recall: 0.5966 - val_accuracy: 0.6975 - val_auc: 0.4493 - val_loss: 0.6798 - val_precision: 0.0605 - val_recall: 0.2676 - learning_rate: 0.0100
+Epoch 3/100
+36/36 - 2s - 42ms/step - accuracy: 0.5875 - auc: 0.6399 - loss: 0.6655 - precision: 0.1485 - recall: 0.6303 - val_accuracy: 0.4394 - val_auc: 0.5511 - val_loss: 0.7242 - val_precision: 0.0680 - val_recall: 0.6338 - learning_rate: 0.0100
+Epoch 4/100
+36/36 - 2s - 42ms/step - accuracy: 0.6684 - auc: 0.6810 - loss: 0.6413 - precision: 0.1789 - recall: 0.6134 - val_accuracy: 0.5179 - val_auc: 0.5648 - val_loss: 0.7152 - val_precision: 0.0696 - val_recall: 0.5493 - learning_rate: 0.0100
+Epoch 5/100
+36/36 - 2s - 43ms/step - accuracy: 0.7067 - auc: 0.6456 - loss: 0.6537 - precision: 0.1831 - recall: 0.5294 - val_accuracy: 0.9381 - val_auc: 0.5085 - val_loss: 0.5225 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0100
+Epoch 6/100
+36/36 - 1s - 41ms/step - accuracy: 0.6780 - auc: 0.7139 - loss: 0.6189 - precision: 0.1870 - recall: 0.6303 - val_accuracy: 0.6809 - val_auc: 0.5070 - val_loss: 0.6681 - val_precision: 0.0798 - val_recall: 0.3944 - learning_rate: 0.0100
+Epoch 7/100
+36/36 - 2s - 46ms/step - accuracy: 0.6449 - auc: 0.6944 - loss: 0.6345 - precision: 0.1708 - recall: 0.6303 - val_accuracy: 0.8788 - val_auc: 0.5045 - val_loss: 0.4890 - val_precision: 0.1222 - val_recall: 0.1549 - learning_rate: 0.0100
+Epoch 8/100
+36/36 - 2s - 42ms/step - accuracy: 0.7137 - auc: 0.7113 - loss: 0.6158 - precision: 0.2000 - recall: 0.5882 - val_accuracy: 0.4804 - val_auc: 0.5180 - val_loss: 0.8079 - val_precision: 0.0632 - val_recall: 0.5352 - learning_rate: 0.0100
+Epoch 9/100
+36/36 - 2s - 47ms/step - accuracy: 0.7215 - auc: 0.7495 - loss: 0.5871 - precision: 0.2104 - recall: 0.6134 - val_accuracy: 0.4996 - val_auc: 0.5372 - val_loss: 0.9251 - val_precision: 0.0611 - val_recall: 0.4930 - learning_rate: 0.0100
+Epoch 10/100
+36/36 - 2s - 45ms/step - accuracy: 0.6989 - auc: 0.7261 - loss: 0.6163 - precision: 0.2052 - recall: 0.6639 - val_accuracy: 0.4202 - val_auc: 0.5488 - val_loss: 0.8355 - val_precision: 0.0619 - val_recall: 0.5915 - learning_rate: 0.0100
+Epoch 11/100
+36/36 - 2s - 42ms/step - accuracy: 0.6728 - auc: 0.7231 - loss: 0.6026 - precision: 0.1904 - recall: 0.6639 - val_accuracy: 0.8038 - val_auc: 0.5820 - val_loss: 0.5581 - val_precision: 0.1262 - val_recall: 0.3662 - learning_rate: 0.0100
+Epoch 12/100
+
+Epoch 12: ReduceLROnPlateau reducing learning rate to 0.004999999888241291.
+36/36 - 2s - 46ms/step - accuracy: 0.6667 - auc: 0.7365 - loss: 0.5931 - precision: 0.1812 - recall: 0.6303 - val_accuracy: 0.4176 - val_auc: 0.5837 - val_loss: 0.8934 - val_precision: 0.0730 - val_recall: 0.7183 - learning_rate: 0.0100
+Epoch 13/100
+36/36 - 2s - 43ms/step - accuracy: 0.6884 - auc: 0.7867 - loss: 0.5491 - precision: 0.2107 - recall: 0.7311 - val_accuracy: 0.3888 - val_auc: 0.5415 - val_loss: 1.0359 - val_precision: 0.0649 - val_recall: 0.6620 - learning_rate: 0.0050
+Epoch 14/100
+36/36 - 2s - 46ms/step - accuracy: 0.6780 - auc: 0.7889 - loss: 0.5457 - precision: 0.2061 - recall: 0.7395 - val_accuracy: 0.8910 - val_auc: 0.5034 - val_loss: 0.4192 - val_precision: 0.1538 - val_recall: 0.1690 - learning_rate: 0.0050
+Epoch 15/100
+36/36 - 2s - 43ms/step - accuracy: 0.6997 - auc: 0.7899 - loss: 0.5478 - precision: 0.2175 - recall: 0.7311 - val_accuracy: 0.6138 - val_auc: 0.4782 - val_loss: 0.8480 - val_precision: 0.0613 - val_recall: 0.3662 - learning_rate: 0.0050
+Epoch 16/100
+36/36 - 2s - 44ms/step - accuracy: 0.6893 - auc: 0.8043 - loss: 0.5272 - precision: 0.2180 - recall: 0.7731 - val_accuracy: 0.6617 - val_auc: 0.4929 - val_loss: 0.7568 - val_precision: 0.0658 - val_recall: 0.3380 - learning_rate: 0.0050
+Epoch 17/100
+36/36 - 2s - 44ms/step - accuracy: 0.7346 - auc: 0.8150 - loss: 0.5202 - precision: 0.2417 - recall: 0.7311 - val_accuracy: 0.3949 - val_auc: 0.5129 - val_loss: 1.2278 - val_precision: 0.0619 - val_recall: 0.6197 - learning_rate: 0.0050
+Epoch 18/100
+36/36 - 2s - 47ms/step - accuracy: 0.7250 - auc: 0.8011 - loss: 0.5425 - precision: 0.2271 - recall: 0.6891 - val_accuracy: 0.3784 - val_auc: 0.4971 - val_loss: 1.0840 - val_precision: 0.0566 - val_recall: 0.5775 - learning_rate: 0.0050
+Epoch 19/100
+
+Epoch 19: ReduceLROnPlateau reducing learning rate to 0.0024999999441206455.
+36/36 - 2s - 45ms/step - accuracy: 0.7415 - auc: 0.8337 - loss: 0.4920 - precision: 0.2457 - recall: 0.7227 - val_accuracy: 0.5998 - val_auc: 0.4589 - val_loss: 0.8828 - val_precision: 0.0550 - val_recall: 0.3380 - learning_rate: 0.0050
+Epoch 20/100
+36/36 - 2s - 46ms/step - accuracy: 0.7615 - auc: 0.8014 - loss: 0.5430 - precision: 0.2555 - recall: 0.6807 - val_accuracy: 0.7576 - val_auc: 0.5209 - val_loss: 0.5287 - val_precision: 0.0876 - val_recall: 0.3099 - learning_rate: 0.0025
+Epoch 21/100
+36/36 - 2s - 42ms/step - accuracy: 0.7406 - auc: 0.8279 - loss: 0.5061 - precision: 0.2493 - recall: 0.7479 - val_accuracy: 0.5405 - val_auc: 0.5027 - val_loss: 1.0314 - val_precision: 0.0632 - val_recall: 0.4648 - learning_rate: 0.0025
+Epoch 22/100
+36/36 - 2s - 45ms/step - accuracy: 0.7763 - auc: 0.8591 - loss: 0.4656 - precision: 0.2883 - recall: 0.7899 - val_accuracy: 0.5719 - val_auc: 0.5059 - val_loss: 0.9004 - val_precision: 0.0607 - val_recall: 0.4085 - learning_rate: 0.0025
+Epoch 22: early stopping
+Restoring model weights from the end of the best epoch: 12.
+[2026-10-06 12:24:20] INFO     === Fold 2/3 ===                                
+                      INFO     Train rows: 2474, Val rows: 1236                
+                      INFO     Fold 2 sequences — train: (2385, 90, 25), val:  
+                               (1147, 90, 25)                                  
+                      INFO     Class weights (balanced): {0: 0.546767537826685,
+                               1: 5.845588235294118}                           
+Epoch 1/100
+75/75 - 5s - 73ms/step - accuracy: 0.5371 - auc: 0.5768 - loss: 0.7082 - precision: 0.1053 - recall: 0.5882 - val_accuracy: 0.2249 - val_auc: 0.4364 - val_loss: 0.7225 - val_precision: 0.2032 - val_recall: 0.8106 - learning_rate: 0.0100
+Epoch 2/100
+75/75 - 3s - 38ms/step - accuracy: 0.5350 - auc: 0.6398 - loss: 0.6635 - precision: 0.1207 - recall: 0.7059 - val_accuracy: 0.6931 - val_auc: 0.6006 - val_loss: 0.5781 - val_precision: 0.1812 - val_recall: 0.0947 - learning_rate: 0.0100
+Epoch 3/100
+75/75 - 3s - 37ms/step - accuracy: 0.5702 - auc: 0.6327 - loss: 0.6678 - precision: 0.1196 - recall: 0.6324 - val_accuracy: 0.7114 - val_auc: 0.5472 - val_loss: 0.5747 - val_precision: 0.0649 - val_recall: 0.0189 - learning_rate: 0.0100
+Epoch 4/100
+75/75 - 3s - 36ms/step - accuracy: 0.5119 - auc: 0.6512 - loss: 0.6677 - precision: 0.1117 - recall: 0.6765 - val_accuracy: 0.6905 - val_auc: 0.5940 - val_loss: 0.6564 - val_precision: 0.2339 - val_recall: 0.1515 - learning_rate: 0.0100
+Epoch 5/100
+75/75 - 3s - 36ms/step - accuracy: 0.6260 - auc: 0.6554 - loss: 0.6564 - precision: 0.1301 - recall: 0.5931 - val_accuracy: 0.7698 - val_auc: 0.5647 - val_loss: 0.5464 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0100
+Epoch 6/100
+75/75 - 3s - 36ms/step - accuracy: 0.5644 - auc: 0.6514 - loss: 0.6564 - precision: 0.1215 - recall: 0.6569 - val_accuracy: 0.7576 - val_auc: 0.3884 - val_loss: 0.5636 - val_precision: 0.1500 - val_recall: 0.0114 - learning_rate: 0.0100
+Epoch 7/100
+75/75 - 3s - 36ms/step - accuracy: 0.6067 - auc: 0.6783 - loss: 0.6415 - precision: 0.1330 - recall: 0.6520 - val_accuracy: 0.7175 - val_auc: 0.5921 - val_loss: 0.5512 - val_precision: 0.0588 - val_recall: 0.0152 - learning_rate: 0.0100
+Epoch 8/100
+75/75 - 3s - 36ms/step - accuracy: 0.5451 - auc: 0.6922 - loss: 0.6397 - precision: 0.1326 - recall: 0.7794 - val_accuracy: 0.6809 - val_auc: 0.5619 - val_loss: 0.5826 - val_precision: 0.2992 - val_recall: 0.2879 - learning_rate: 0.0100
+Epoch 9/100
+75/75 - 3s - 36ms/step - accuracy: 0.6415 - auc: 0.6747 - loss: 0.6428 - precision: 0.1387 - recall: 0.6127 - val_accuracy: 0.7698 - val_auc: 0.5658 - val_loss: 0.5565 - val_precision: 0.5000 - val_recall: 0.0038 - learning_rate: 0.0100
+Epoch 10/100
+75/75 - 3s - 37ms/step - accuracy: 0.5761 - auc: 0.6947 - loss: 0.6335 - precision: 0.1322 - recall: 0.7108 - val_accuracy: 0.7698 - val_auc: 0.6354 - val_loss: 0.5297 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0100
+Epoch 11/100
+75/75 - 3s - 35ms/step - accuracy: 0.5790 - auc: 0.6941 - loss: 0.6334 - precision: 0.1289 - recall: 0.6814 - val_accuracy: 0.6338 - val_auc: 0.5914 - val_loss: 0.6491 - val_precision: 0.3010 - val_recall: 0.4470 - learning_rate: 0.0100
+Epoch 12/100
+75/75 - 3s - 37ms/step - accuracy: 0.5459 - auc: 0.6823 - loss: 0.6351 - precision: 0.1227 - recall: 0.7010 - val_accuracy: 0.7341 - val_auc: 0.6166 - val_loss: 0.6063 - val_precision: 0.2192 - val_recall: 0.0606 - learning_rate: 0.0100
+Epoch 13/100
+75/75 - 3s - 37ms/step - accuracy: 0.5606 - auc: 0.7010 - loss: 0.6267 - precision: 0.1298 - recall: 0.7255 - val_accuracy: 0.7306 - val_auc: 0.5719 - val_loss: 0.6252 - val_precision: 0.2680 - val_recall: 0.0985 - learning_rate: 0.0100
+Epoch 14/100
+75/75 - 3s - 37ms/step - accuracy: 0.5883 - auc: 0.7066 - loss: 0.6336 - precision: 0.1411 - recall: 0.7500 - val_accuracy: 0.6922 - val_auc: 0.5632 - val_loss: 0.6384 - val_precision: 0.2201 - val_recall: 0.1326 - learning_rate: 0.0100
+Epoch 15/100
+
+Epoch 15: ReduceLROnPlateau reducing learning rate to 0.004999999888241291.
+75/75 - 3s - 36ms/step - accuracy: 0.5505 - auc: 0.6945 - loss: 0.6348 - precision: 0.1271 - recall: 0.7255 - val_accuracy: 0.6896 - val_auc: 0.5853 - val_loss: 0.6621 - val_precision: 0.2527 - val_recall: 0.1780 - learning_rate: 0.0100
+Epoch 16/100
+75/75 - 3s - 37ms/step - accuracy: 0.5577 - auc: 0.6898 - loss: 0.6359 - precision: 0.1341 - recall: 0.7647 - val_accuracy: 0.7698 - val_auc: 0.4514 - val_loss: 0.5709 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0050
+Epoch 17/100
+75/75 - 3s - 37ms/step - accuracy: 0.5908 - auc: 0.7347 - loss: 0.6005 - precision: 0.1452 - recall: 0.7745 - val_accuracy: 0.7550 - val_auc: 0.5445 - val_loss: 0.5486 - val_precision: 0.3111 - val_recall: 0.0530 - learning_rate: 0.0050
+Epoch 18/100
+75/75 - 3s - 37ms/step - accuracy: 0.6034 - auc: 0.7476 - loss: 0.5917 - precision: 0.1500 - recall: 0.7794 - val_accuracy: 0.7698 - val_auc: 0.5070 - val_loss: 0.5496 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0050
+Epoch 19/100
+75/75 - 3s - 35ms/step - accuracy: 0.6373 - auc: 0.7584 - loss: 0.5844 - precision: 0.1603 - recall: 0.7647 - val_accuracy: 0.7698 - val_auc: 0.4524 - val_loss: 0.5819 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0050
+Epoch 20/100
+
+Epoch 20: ReduceLROnPlateau reducing learning rate to 0.0024999999441206455.
+75/75 - 3s - 37ms/step - accuracy: 0.6512 - auc: 0.7527 - loss: 0.5872 - precision: 0.1587 - recall: 0.7157 - val_accuracy: 0.7698 - val_auc: 0.4483 - val_loss: 0.6499 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0050
+Epoch 20: early stopping
+Restoring model weights from the end of the best epoch: 10.
+[2026-10-06 12:25:19] INFO     === Fold 3/3 ===                                
+                      INFO     Train rows: 3710, Val rows: 1236                
+                      INFO     Fold 3 sequences — train: (3621, 90, 25), val:  
+                               (1147, 90, 25)                                  
+                      INFO     Class weights (balanced): {0:                   
+                               0.5762253341820497, 1: 3.779749478079332}       
+Epoch 1/100
+114/114 - 7s - 58ms/step - accuracy: 0.6103 - auc: 0.6038 - loss: 0.6915 - precision: 0.1777 - recall: 0.5365 - val_accuracy: 0.8631 - val_auc: 0.4711 - val_loss: 0.6429 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0100
+Epoch 2/100
+114/114 - 4s - 34ms/step - accuracy: 0.6609 - auc: 0.6381 - loss: 0.6650 - precision: 0.2025 - recall: 0.5324 - val_accuracy: 0.8631 - val_auc: 0.6137 - val_loss: 0.6053 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0100
+Epoch 3/100
+114/114 - 4s - 35ms/step - accuracy: 0.6584 - auc: 0.6485 - loss: 0.6608 - precision: 0.2111 - recall: 0.5783 - val_accuracy: 0.1369 - val_auc: 0.5612 - val_loss: 0.9421 - val_precision: 0.1369 - val_recall: 1.0000 - learning_rate: 0.0100
+Epoch 4/100
+114/114 - 4s - 34ms/step - accuracy: 0.6727 - auc: 0.6703 - loss: 0.6486 - precision: 0.2189 - recall: 0.5741 - val_accuracy: 0.1369 - val_auc: 0.5678 - val_loss: 1.2307 - val_precision: 0.1369 - val_recall: 1.0000 - learning_rate: 0.0100
+Epoch 5/100
+114/114 - 4s - 35ms/step - accuracy: 0.6393 - auc: 0.6805 - loss: 0.6462 - precision: 0.2094 - recall: 0.6221 - val_accuracy: 0.1378 - val_auc: 0.6214 - val_loss: 0.8604 - val_precision: 0.1370 - val_recall: 1.0000 - learning_rate: 0.0100
+Epoch 6/100
+114/114 - 4s - 34ms/step - accuracy: 0.6628 - auc: 0.6900 - loss: 0.6373 - precision: 0.2159 - recall: 0.5887 - val_accuracy: 0.1369 - val_auc: 0.4892 - val_loss: 0.9550 - val_precision: 0.1369 - val_recall: 1.0000 - learning_rate: 0.0100
+Epoch 7/100
+
+Epoch 7: ReduceLROnPlateau reducing learning rate to 0.004999999888241291.
+114/114 - 4s - 35ms/step - accuracy: 0.6275 - auc: 0.6760 - loss: 0.6452 - precision: 0.2057 - recall: 0.6347 - val_accuracy: 0.1369 - val_auc: 0.5244 - val_loss: 0.7633 - val_precision: 0.1369 - val_recall: 1.0000 - learning_rate: 0.0100
+Epoch 8/100
+114/114 - 4s - 34ms/step - accuracy: 0.6142 - auc: 0.6970 - loss: 0.6306 - precision: 0.2058 - recall: 0.6701 - val_accuracy: 0.1369 - val_auc: 0.6594 - val_loss: 0.7992 - val_precision: 0.1369 - val_recall: 1.0000 - learning_rate: 0.0050
+Epoch 9/100
+114/114 - 4s - 34ms/step - accuracy: 0.6327 - auc: 0.7005 - loss: 0.6250 - precision: 0.2139 - recall: 0.6639 - val_accuracy: 0.3461 - val_auc: 0.6428 - val_loss: 0.7360 - val_precision: 0.1635 - val_recall: 0.9172 - learning_rate: 0.0050
+Epoch 10/100
+114/114 - 4s - 35ms/step - accuracy: 0.6639 - auc: 0.7033 - loss: 0.6197 - precision: 0.2242 - recall: 0.6263 - val_accuracy: 0.2581 - val_auc: 0.6299 - val_loss: 0.8862 - val_precision: 0.1530 - val_recall: 0.9745 - learning_rate: 0.0050
+Epoch 11/100
+114/114 - 4s - 34ms/step - accuracy: 0.6697 - auc: 0.7080 - loss: 0.6192 - precision: 0.2278 - recall: 0.6263 - val_accuracy: 0.5789 - val_auc: 0.6248 - val_loss: 0.7070 - val_precision: 0.1791 - val_recall: 0.5796 - learning_rate: 0.0050
+Epoch 12/100
+
+Epoch 12: ReduceLROnPlateau reducing learning rate to 0.0024999999441206455.
+114/114 - 4s - 34ms/step - accuracy: 0.6421 - auc: 0.7105 - loss: 0.6188 - precision: 0.2204 - recall: 0.6722 - val_accuracy: 0.1369 - val_auc: 0.5886 - val_loss: 1.0193 - val_precision: 0.1369 - val_recall: 1.0000 - learning_rate: 0.0050
+Epoch 13/100
+114/114 - 4s - 36ms/step - accuracy: 0.6832 - auc: 0.7236 - loss: 0.6076 - precision: 0.2358 - recall: 0.6221 - val_accuracy: 0.3418 - val_auc: 0.6250 - val_loss: 0.8104 - val_precision: 0.1625 - val_recall: 0.9172 - learning_rate: 0.0025
+Epoch 14/100
+114/114 - 4s - 35ms/step - accuracy: 0.6893 - auc: 0.7282 - loss: 0.6026 - precision: 0.2449 - recall: 0.6472 - val_accuracy: 0.2807 - val_auc: 0.6241 - val_loss: 0.8098 - val_precision: 0.1557 - val_recall: 0.9618 - learning_rate: 0.0025
+Epoch 15/100
+114/114 - 4s - 34ms/step - accuracy: 0.6918 - auc: 0.7336 - loss: 0.5966 - precision: 0.2425 - recall: 0.6263 - val_accuracy: 0.2738 - val_auc: 0.6276 - val_loss: 0.8354 - val_precision: 0.1551 - val_recall: 0.9682 - learning_rate: 0.0025
+Epoch 16/100
+114/114 - 4s - 34ms/step - accuracy: 0.6808 - auc: 0.7206 - loss: 0.6113 - precision: 0.2366 - recall: 0.6347 - val_accuracy: 0.5022 - val_auc: 0.6031 - val_loss: 0.6866 - val_precision: 0.1745 - val_recall: 0.7070 - learning_rate: 0.0025
+Epoch 17/100
+
+Epoch 17: ReduceLROnPlateau reducing learning rate to 0.0012499999720603228.
+114/114 - 4s - 36ms/step - accuracy: 0.6868 - auc: 0.7344 - loss: 0.5996 - precision: 0.2423 - recall: 0.6430 - val_accuracy: 0.6103 - val_auc: 0.6005 - val_loss: 0.6110 - val_precision: 0.1481 - val_recall: 0.3885 - learning_rate: 0.0025
+Epoch 18/100
+114/114 - 4s - 34ms/step - accuracy: 0.6918 - auc: 0.7385 - loss: 0.5938 - precision: 0.2478 - recall: 0.6534 - val_accuracy: 0.6425 - val_auc: 0.6054 - val_loss: 0.5896 - val_precision: 0.1396 - val_recall: 0.3121 - learning_rate: 0.0012
+Epoch 18: early stopping
+Restoring model weights from the end of the best epoch: 8.
+[2026-10-06 12:26:33] INFO     [BTC-USD/ga] Training model pemenang...         
+                      INFO     Class weights (balanced): {0:                   
+                               0.5783070596298835, 1: 3.692560175054705}       
+[2026-10-06 12:27:31] INFO     Artifacts saved → C:\LSTM                       
+                               Crypto\binance_lstm_futures\model\optimized\BTC-
+                               USD\ga                                          
+                      INFO     [BTC-USD/ga] Backtest hit-rate (lookback=200)...
+                      INFO     === BACKTEST MODE — BTC-USD, lookback=200 ===   
+                      INFO     Feature matrix built — shape=(5000, 27), model  
+                               columns=25                                      
+                      INFO     Anti-leakage applied. Rows after dropna: 4946   
+
+Backtest summary — BTC-USD
+  Total candles evaluated : 200
+  LONG signals            : 11
+  SHORT signals           : 0
+  HOLD signals            : 189
+  Hit rate on issued      : 0.182
+
+[2026-10-06 12:27:42] INFO     Backtest results saved → C:\LSTM                
+                               Crypto\binance_lstm_futures\logs\backtest_BTC_US
+                               D_ga_20261006_052742.csv                        
+[2026-10-06 12:27:44] INFO     CHECKPOINT: BTC-USD × ga → C:\LSTM              
+                               Crypto\binance_lstm_futures\logs\optimization_re
+                               sults.csv                                       
+                      INFO     Class weights (balanced): {0:                   
+                               0.5779022403258656, 1: 3.7091503267973858}      
+[2026-10-06 12:29:06] INFO     [BTC-USD/manual] best_hp={'sequence_length': 60,
+                               'lstm_units_1': 128, 'lstm_units_2': 64,        
+                               'dropout_rate': 0.2, 'learning_rate': 0.001,    
+                               'batch_size': 32} val_auc=0.6052 n_evals=1      
+                      INFO     [BTC-USD/manual] Walk-forward final (3 fold)... 
+                      INFO     === Fold 1/3 ===                                
+                      INFO     Train rows: 1238, Val rows: 1236                
+                      INFO     Fold 1 sequences — train: (1179, 60, 25), val:  
+                               (1177, 60, 25)                                  
+                      INFO     Class weights (balanced): {0:                   
+                               0.5571833648393195, 1: 4.871900826446281}       
+Epoch 1/100
+37/37 - 5s - 125ms/step - accuracy: 0.5615 - auc: 0.6419 - loss: 0.7159 - precision: 0.1464 - recall: 0.6777 - val_accuracy: 0.9363 - val_auc: 0.6070 - val_loss: 0.4586 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0010
+Epoch 2/100
+37/37 - 2s - 49ms/step - accuracy: 0.5768 - auc: 0.6483 - loss: 0.7029 - precision: 0.1447 - recall: 0.6364 - val_accuracy: 0.7596 - val_auc: 0.6473 - val_loss: 0.6503 - val_precision: 0.0873 - val_recall: 0.2933 - learning_rate: 0.0010
+Epoch 3/100
+37/37 - 2s - 48ms/step - accuracy: 0.5937 - auc: 0.6879 - loss: 0.6706 - precision: 0.1610 - recall: 0.7025 - val_accuracy: 0.4053 - val_auc: 0.5341 - val_loss: 0.7791 - val_precision: 0.0702 - val_recall: 0.6800 - learning_rate: 0.0010
+Epoch 4/100
+37/37 - 2s - 49ms/step - accuracy: 0.6022 - auc: 0.7111 - loss: 0.6174 - precision: 0.1679 - recall: 0.7273 - val_accuracy: 0.8420 - val_auc: 0.6614 - val_loss: 0.5535 - val_precision: 0.1636 - val_recall: 0.3600 - learning_rate: 0.0010
+Epoch 5/100
+37/37 - 2s - 49ms/step - accuracy: 0.6031 - auc: 0.7277 - loss: 0.6054 - precision: 0.1720 - recall: 0.7521 - val_accuracy: 0.1512 - val_auc: 0.6184 - val_loss: 0.8267 - val_precision: 0.0650 - val_recall: 0.9200 - learning_rate: 0.0010
+Epoch 6/100
+37/37 - 2s - 50ms/step - accuracy: 0.6115 - auc: 0.7427 - loss: 0.5978 - precision: 0.1850 - recall: 0.8182 - val_accuracy: 0.9201 - val_auc: 0.6273 - val_loss: 0.4106 - val_precision: 0.1481 - val_recall: 0.0533 - learning_rate: 0.0010
+Epoch 7/100
+37/37 - 2s - 49ms/step - accuracy: 0.6463 - auc: 0.7686 - loss: 0.5643 - precision: 0.1942 - recall: 0.7769 - val_accuracy: 0.8071 - val_auc: 0.5454 - val_loss: 0.4799 - val_precision: 0.0778 - val_recall: 0.1867 - learning_rate: 0.0010
+Epoch 8/100
+37/37 - 2s - 49ms/step - accuracy: 0.6370 - auc: 0.7735 - loss: 0.5548 - precision: 0.1874 - recall: 0.7603 - val_accuracy: 0.2447 - val_auc: 0.5736 - val_loss: 0.8365 - val_precision: 0.0716 - val_recall: 0.9067 - learning_rate: 0.0010
+Epoch 9/100
+37/37 - 2s - 50ms/step - accuracy: 0.6658 - auc: 0.7985 - loss: 0.5374 - precision: 0.2102 - recall: 0.8182 - val_accuracy: 0.5871 - val_auc: 0.5476 - val_loss: 0.8047 - val_precision: 0.0865 - val_recall: 0.5733 - learning_rate: 0.0010
+Epoch 10/100
+37/37 - 2s - 47ms/step - accuracy: 0.6658 - auc: 0.7947 - loss: 0.5348 - precision: 0.2039 - recall: 0.7769 - val_accuracy: 0.6950 - val_auc: 0.4681 - val_loss: 0.6393 - val_precision: 0.0697 - val_recall: 0.3067 - learning_rate: 0.0010
+Epoch 11/100
+
+Epoch 11: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+37/37 - 2s - 50ms/step - accuracy: 0.6811 - auc: 0.8007 - loss: 0.5293 - precision: 0.2109 - recall: 0.7686 - val_accuracy: 0.4775 - val_auc: 0.5335 - val_loss: 0.9015 - val_precision: 0.0728 - val_recall: 0.6133 - learning_rate: 0.0010
+Epoch 12/100
+37/37 - 2s - 48ms/step - accuracy: 0.6718 - auc: 0.8249 - loss: 0.4982 - precision: 0.2170 - recall: 0.8430 - val_accuracy: 0.6933 - val_auc: 0.4765 - val_loss: 0.5944 - val_precision: 0.0667 - val_recall: 0.2933 - learning_rate: 5.0000e-04
+Epoch 13/100
+37/37 - 2s - 47ms/step - accuracy: 0.7048 - auc: 0.8355 - loss: 0.4892 - precision: 0.2329 - recall: 0.8182 - val_accuracy: 0.6219 - val_auc: 0.4928 - val_loss: 0.8661 - val_precision: 0.0616 - val_recall: 0.3467 - learning_rate: 5.0000e-04
+Epoch 14/100
+37/37 - 2s - 48ms/step - accuracy: 0.6964 - auc: 0.8435 - loss: 0.4767 - precision: 0.2313 - recall: 0.8430 - val_accuracy: 0.7077 - val_auc: 0.4433 - val_loss: 0.7017 - val_precision: 0.0590 - val_recall: 0.2400 - learning_rate: 5.0000e-04
+Epoch 14: early stopping
+Restoring model weights from the end of the best epoch: 4.
+[2026-10-06 12:29:36] INFO     === Fold 2/3 ===                                
+                      INFO     Train rows: 2474, Val rows: 1236                
+                      INFO     Fold 2 sequences — train: (2415, 60, 25), val:  
+                               (1177, 60, 25)                                  
+                      INFO     Class weights (balanced): {0:                   
+                               0.5466274332277048, 1: 5.861650485436893}       
+Epoch 1/100
+76/76 - 6s - 76ms/step - accuracy: 0.5652 - auc: 0.6273 - loss: 0.6923 - precision: 0.1178 - recall: 0.6311 - val_accuracy: 0.7077 - val_auc: 0.4413 - val_loss: 0.6400 - val_precision: 0.1165 - val_recall: 0.0453 - learning_rate: 0.0010
+Epoch 2/100
+76/76 - 3s - 45ms/step - accuracy: 0.5830 - auc: 0.6279 - loss: 0.7077 - precision: 0.1197 - recall: 0.6117 - val_accuracy: 0.6950 - val_auc: 0.5436 - val_loss: 0.6228 - val_precision: 0.1083 - val_recall: 0.0491 - learning_rate: 0.0010
+Epoch 3/100
+76/76 - 3s - 45ms/step - accuracy: 0.6116 - auc: 0.6752 - loss: 0.6614 - precision: 0.1340 - recall: 0.6505 - val_accuracy: 0.7256 - val_auc: 0.3875 - val_loss: 0.6166 - val_precision: 0.0606 - val_recall: 0.0151 - learning_rate: 0.0010
+Epoch 4/100
+76/76 - 3s - 45ms/step - accuracy: 0.6149 - auc: 0.6819 - loss: 0.6504 - precision: 0.1402 - recall: 0.6845 - val_accuracy: 0.6737 - val_auc: 0.4037 - val_loss: 0.6799 - val_precision: 0.1949 - val_recall: 0.1434 - learning_rate: 0.0010
+Epoch 5/100
+76/76 - 3s - 45ms/step - accuracy: 0.6133 - auc: 0.7059 - loss: 0.6288 - precision: 0.1396 - recall: 0.6845 - val_accuracy: 0.2778 - val_auc: 0.3659 - val_loss: 0.7297 - val_precision: 0.1761 - val_recall: 0.6000 - learning_rate: 0.0010
+Epoch 6/100
+76/76 - 4s - 50ms/step - accuracy: 0.6427 - auc: 0.7235 - loss: 0.6157 - precision: 0.1487 - recall: 0.6748 - val_accuracy: 0.7570 - val_auc: 0.4161 - val_loss: 0.6029 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0010
+Epoch 7/100
+76/76 - 4s - 53ms/step - accuracy: 0.6464 - auc: 0.7384 - loss: 0.6007 - precision: 0.1561 - recall: 0.7136 - val_accuracy: 0.7460 - val_auc: 0.3534 - val_loss: 0.6156 - val_precision: 0.0278 - val_recall: 0.0038 - learning_rate: 0.0010
+Epoch 8/100
+76/76 - 4s - 47ms/step - accuracy: 0.6464 - auc: 0.7633 - loss: 0.5786 - precision: 0.1646 - recall: 0.7718 - val_accuracy: 0.7706 - val_auc: 0.4189 - val_loss: 0.5939 - val_precision: 0.3077 - val_recall: 0.0151 - learning_rate: 0.0010
+Epoch 9/100
+76/76 - 4s - 51ms/step - accuracy: 0.6563 - auc: 0.7502 - loss: 0.5871 - precision: 0.1631 - recall: 0.7330 - val_accuracy: 0.7681 - val_auc: 0.5154 - val_loss: 0.6112 - val_precision: 0.3667 - val_recall: 0.0415 - learning_rate: 0.0010
+Epoch 10/100
+76/76 - 4s - 50ms/step - accuracy: 0.6625 - auc: 0.7792 - loss: 0.5609 - precision: 0.1736 - recall: 0.7864 - val_accuracy: 0.6788 - val_auc: 0.4790 - val_loss: 0.6196 - val_precision: 0.1696 - val_recall: 0.1094 - learning_rate: 0.0010
+Epoch 11/100
+76/76 - 4s - 54ms/step - accuracy: 0.6675 - auc: 0.7864 - loss: 0.5530 - precision: 0.1745 - recall: 0.7767 - val_accuracy: 0.7706 - val_auc: 0.5958 - val_loss: 0.6053 - val_precision: 0.3333 - val_recall: 0.0189 - learning_rate: 0.0010
+Epoch 12/100
+76/76 - 4s - 49ms/step - accuracy: 0.6807 - auc: 0.7973 - loss: 0.5483 - precision: 0.1837 - recall: 0.7961 - val_accuracy: 0.6083 - val_auc: 0.3533 - val_loss: 0.6956 - val_precision: 0.1397 - val_recall: 0.1434 - learning_rate: 0.0010
+Epoch 13/100
+
+Epoch 13: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+76/76 - 4s - 48ms/step - accuracy: 0.6853 - auc: 0.8161 - loss: 0.5221 - precision: 0.1845 - recall: 0.7864 - val_accuracy: 0.4376 - val_auc: 0.3492 - val_loss: 0.6998 - val_precision: 0.1487 - val_recall: 0.3170 - learning_rate: 0.0010
+Epoch 14/100
+76/76 - 4s - 49ms/step - accuracy: 0.7313 - auc: 0.8559 - loss: 0.4744 - precision: 0.2171 - recall: 0.8252 - val_accuracy: 0.6907 - val_auc: 0.3545 - val_loss: 0.7137 - val_precision: 0.1678 - val_recall: 0.0943 - learning_rate: 5.0000e-04
+Epoch 15/100
+76/76 - 4s - 52ms/step - accuracy: 0.7358 - auc: 0.8518 - loss: 0.4746 - precision: 0.2188 - recall: 0.8155 - val_accuracy: 0.3016 - val_auc: 0.3517 - val_loss: 0.8028 - val_precision: 0.1881 - val_recall: 0.6340 - learning_rate: 5.0000e-04
+Epoch 16/100
+76/76 - 4s - 49ms/step - accuracy: 0.7511 - auc: 0.8721 - loss: 0.4483 - precision: 0.2363 - recall: 0.8592 - val_accuracy: 0.2268 - val_auc: 0.3435 - val_loss: 0.8501 - val_precision: 0.1983 - val_recall: 0.8000 - learning_rate: 5.0000e-04
+Epoch 17/100
+76/76 - 4s - 47ms/step - accuracy: 0.7586 - auc: 0.8824 - loss: 0.4309 - precision: 0.2400 - recall: 0.8447 - val_accuracy: 0.2455 - val_auc: 0.3882 - val_loss: 0.8530 - val_precision: 0.1996 - val_recall: 0.7811 - learning_rate: 5.0000e-04
+Epoch 18/100
+
+Epoch 18: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+76/76 - 3s - 45ms/step - accuracy: 0.7698 - auc: 0.8832 - loss: 0.4289 - precision: 0.2528 - recall: 0.8689 - val_accuracy: 0.2353 - val_auc: 0.3438 - val_loss: 0.9513 - val_precision: 0.2002 - val_recall: 0.8000 - learning_rate: 5.0000e-04
+Epoch 19/100
+76/76 - 4s - 49ms/step - accuracy: 0.7884 - auc: 0.9024 - loss: 0.3998 - precision: 0.2700 - recall: 0.8689 - val_accuracy: 0.2370 - val_auc: 0.3492 - val_loss: 0.9649 - val_precision: 0.2050 - val_recall: 0.8302 - learning_rate: 2.5000e-04
+Epoch 20/100
+76/76 - 4s - 48ms/step - accuracy: 0.7913 - auc: 0.9081 - loss: 0.3873 - precision: 0.2701 - recall: 0.8495 - val_accuracy: 0.2600 - val_auc: 0.3414 - val_loss: 0.9991 - val_precision: 0.2109 - val_recall: 0.8340 - learning_rate: 2.5000e-04
+Epoch 21/100
+76/76 - 4s - 47ms/step - accuracy: 0.8004 - auc: 0.9087 - loss: 0.3862 - precision: 0.2837 - recall: 0.8786 - val_accuracy: 0.2455 - val_auc: 0.3508 - val_loss: 1.0534 - val_precision: 0.2124 - val_recall: 0.8679 - learning_rate: 2.5000e-04
+Epoch 21: early stopping
+Restoring model weights from the end of the best epoch: 11.
+[2026-10-06 12:30:56] INFO     === Fold 3/3 ===                                
+                      INFO     Train rows: 3710, Val rows: 1236                
+                      INFO     Fold 3 sequences — train: (3651, 60, 25), val:  
+                               (1177, 60, 25)                                  
+                      INFO     Class weights (balanced): {0:                   
+                               0.5758675078864354, 1: 3.7952182952182953}      
+Epoch 1/100
+115/115 - 9s - 74ms/step - accuracy: 0.6390 - auc: 0.6474 - loss: 0.6861 - precision: 0.1911 - recall: 0.5385 - val_accuracy: 0.8598 - val_auc: 0.6185 - val_loss: 0.5805 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0010
+Epoch 2/100
+115/115 - 5s - 43ms/step - accuracy: 0.6308 - auc: 0.6740 - loss: 0.6600 - precision: 0.2021 - recall: 0.6112 - val_accuracy: 0.1402 - val_auc: 0.6149 - val_loss: 0.8442 - val_precision: 0.1402 - val_recall: 1.0000 - learning_rate: 0.0010
+Epoch 3/100
+115/115 - 5s - 45ms/step - accuracy: 0.6253 - auc: 0.6609 - loss: 0.6631 - precision: 0.1939 - recall: 0.5842 - val_accuracy: 0.1402 - val_auc: 0.6134 - val_loss: 0.8137 - val_precision: 0.1402 - val_recall: 1.0000 - learning_rate: 0.0010
+Epoch 4/100
+115/115 - 5s - 42ms/step - accuracy: 0.6272 - auc: 0.6910 - loss: 0.6383 - precision: 0.2117 - recall: 0.6715 - val_accuracy: 0.8598 - val_auc: 0.5637 - val_loss: 0.4953 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0010
+Epoch 5/100
+115/115 - 5s - 45ms/step - accuracy: 0.6327 - auc: 0.7030 - loss: 0.6269 - precision: 0.2126 - recall: 0.6611 - val_accuracy: 0.7358 - val_auc: 0.6109 - val_loss: 0.6528 - val_precision: 0.1958 - val_recall: 0.2848 - learning_rate: 0.0010
+Epoch 6/100
+115/115 - 5s - 46ms/step - accuracy: 0.6261 - auc: 0.7071 - loss: 0.6253 - precision: 0.2107 - recall: 0.6694 - val_accuracy: 0.7995 - val_auc: 0.4992 - val_loss: 0.6257 - val_precision: 0.1966 - val_recall: 0.1394 - learning_rate: 0.0010
+Epoch 7/100
+115/115 - 5s - 45ms/step - accuracy: 0.6379 - auc: 0.7285 - loss: 0.6052 - precision: 0.2224 - recall: 0.7006 - val_accuracy: 0.8462 - val_auc: 0.5713 - val_loss: 0.4354 - val_precision: 0.1364 - val_recall: 0.0182 - learning_rate: 0.0010
+Epoch 8/100
+115/115 - 5s - 43ms/step - accuracy: 0.6278 - auc: 0.7166 - loss: 0.6148 - precision: 0.2119 - recall: 0.6715 - val_accuracy: 0.5072 - val_auc: 0.5325 - val_loss: 0.7149 - val_precision: 0.1570 - val_recall: 0.5758 - learning_rate: 0.0010
+Epoch 9/100
+115/115 - 5s - 42ms/step - accuracy: 0.6330 - auc: 0.7222 - loss: 0.6125 - precision: 0.2224 - recall: 0.7152 - val_accuracy: 0.2277 - val_auc: 0.4123 - val_loss: 0.7954 - val_precision: 0.1181 - val_recall: 0.6970 - learning_rate: 0.0010
+Epoch 10/100
+115/115 - 5s - 46ms/step - accuracy: 0.6494 - auc: 0.7385 - loss: 0.5971 - precision: 0.2299 - recall: 0.7069 - val_accuracy: 0.3398 - val_auc: 0.6018 - val_loss: 0.7603 - val_precision: 0.1592 - val_recall: 0.8667 - learning_rate: 0.0010
+Epoch 11/100
+115/115 - 5s - 42ms/step - accuracy: 0.6289 - auc: 0.7429 - loss: 0.5931 - precision: 0.2252 - recall: 0.7443 - val_accuracy: 0.8607 - val_auc: 0.4890 - val_loss: 0.5830 - val_precision: 0.5556 - val_recall: 0.0303 - learning_rate: 0.0010
+Epoch 11: early stopping
+Restoring model weights from the end of the best epoch: 1.
+[2026-10-06 12:31:56] INFO     [BTC-USD/manual] Training model pemenang...     
+                      INFO     Class weights (balanced): {0:                   
+                               0.5779022403258656, 1: 3.7091503267973858}      
+[2026-10-06 12:33:01] INFO     Artifacts saved → C:\LSTM                       
+                               Crypto\binance_lstm_futures\model\optimized\BTC-
+                               USD\manual                                      
+                      INFO     [BTC-USD/manual] Backtest hit-rate              
+                               (lookback=200)...                               
+                      INFO     === BACKTEST MODE — BTC-USD, lookback=200 ===   
+                      INFO     Feature matrix built — shape=(5000, 27), model  
+                               columns=25                                      
+                      INFO     Anti-leakage applied. Rows after dropna: 4946   
+
+Backtest summary — BTC-USD
+  Total candles evaluated : 200
+  LONG signals            : 142
+  SHORT signals           : 0
+  HOLD signals            : 58
+  Hit rate on issued      : 0.127
+
+[2026-10-06 12:33:13] INFO     Backtest results saved → C:\LSTM                
+                               Crypto\binance_lstm_futures\logs\backtest_BTC_US
+                               D_manual_20261006_053313.csv                    
+[2026-10-06 12:33:15] INFO     CHECKPOINT: BTC-USD × manual → C:\LSTM          
+                               Crypto\binance_lstm_futures\logs\optimization_re
+                               sults.csv                                       
+                      INFO     cache-only: ohlcv_yf_ETH_USD_15m_5000.parquet   
+                               cocok dengan MANIFEST (SHA256, candle terakhir  
+                               2026-09-12 05:45 UTC)                           
+                      INFO     cache-only: ohlcv_yf_ETH_USD_1h_5000.parquet    
+                               cocok dengan MANIFEST (SHA256, candle terakhir  
+                               2026-09-12 05:00 UTC)                           
+                      INFO     cache-only: fgi_90.parquet cocok dengan MANIFEST
+                               (SHA256, candle terakhir 2026-09-12 UTC)        
+                      INFO     Feature matrix built — shape=(5000, 27), model  
+                               columns=25                                      
+                      INFO     Anti-leakage applied. Rows after dropna: 4946   
+                      INFO     GA start: pop=10, gen=6, tournament=3, cx=0.8,  
+                               mut=0.15, elit=2, seed=42                       
+                      INFO     Class weights (balanced): {0:                   
+                               0.6077494692144374, 1: 2.8201970443349755}      
+[2026-10-06 12:33:57] INFO     Class weights (balanced): {0:                   
+                               0.6077494692144374, 1: 2.8201970443349755}      
+[2026-10-06 12:34:28] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 12:37:32] INFO     Class weights (balanced): {0:                   
+                               0.6090677348871085, 1: 2.792153589315526}       
+[2026-10-06 12:38:24] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 12:40:06] INFO     Class weights (balanced): {0:                   
+                               0.6089055793991416, 1: 2.7955665024630543}      
+[2026-10-06 12:41:35] INFO     Class weights (balanced): {0:                   
+                               0.6090677348871085, 1: 2.792153589315526}       
+[2026-10-06 12:45:50] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 12:47:27] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 12:51:31] INFO     Class weights (balanced): {0:                   
+                               0.6089055793991416, 1: 2.7955665024630543}      
+[2026-10-06 12:52:41] INFO     GA gen 0/6: best=0.6283 mean=0.5920 evals=10    
+                      INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 12:55:03] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 12:57:05] INFO     Class weights (balanced): {0:                   
+                               0.6090677348871085, 1: 2.792153589315526}       
+[2026-10-06 12:58:14] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:00:51] INFO     Class weights (balanced): {0:                   
+                               0.6077494692144374, 1: 2.8201970443349755}      
+[2026-10-06 13:01:55] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:04:50] INFO     GA gen 1/6: best=0.6287 mean=0.6078 evals=16    
+                      INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:07:02] INFO     Class weights (balanced): {0:                   
+                               0.6077494692144374, 1: 2.8201970443349755}      
+[2026-10-06 13:09:06] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:11:42] INFO     Class weights (balanced): {0:                   
+                               0.6090677348871085, 1: 2.792153589315526}       
+[2026-10-06 13:13:48] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:16:57] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:19:36] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:22:05] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:25:06] INFO     GA gen 2/6: best=0.6415 mean=0.6105 evals=24    
+                      INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:26:41] INFO     Class weights (balanced): {0:                   
+                               0.6077494692144374, 1: 2.8201970443349755}      
+[2026-10-06 13:27:04] INFO     Class weights (balanced): {0: 0.608324439701174,
+                               1: 2.8078817733990147}                          
+[2026-10-06 13:27:55] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:29:37] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:30:36] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:31:45] INFO     Class weights (balanced): {0:                   
+                               0.6090677348871085, 1: 2.792153589315526}       
+[2026-10-06 13:32:33] INFO     GA gen 3/6: best=0.6415 mean=0.6143 evals=31    
+                      INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:33:23] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:34:13] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:35:34] INFO     Class weights (balanced): {0:                   
+                               0.6089055793991416, 1: 2.7955665024630543}      
+[2026-10-06 13:36:19] INFO     Class weights (balanced): {0:                   
+                               0.6089055793991416, 1: 2.7955665024630543}      
+[2026-10-06 13:37:23] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:38:21] INFO     GA gen 4/6: best=0.6415 mean=0.6092 evals=37    
+                      INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:39:13] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:41:25] INFO     Class weights (balanced): {0:                   
+                               0.6089055793991416, 1: 2.7955665024630543}      
+[2026-10-06 13:44:43] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:46:01] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:47:08] INFO     Class weights (balanced): {0:                   
+                               0.6089055793991416, 1: 2.7955665024630543}      
+[2026-10-06 13:48:17] INFO     GA gen 5/6: best=0.6650 mean=0.6250 evals=43    
+                      INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:49:27] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
+[2026-10-06 13:51:03] INFO     Class weights (balanced): {0:                   
+                               0.6089055793991416, 1: 2.7955665024630543}      
+[2026-10-06 13:52:16] INFO     Class weights (balanced): {0: 0.608324439701174,
+                               1: 2.8078817733990147}                          
+[2026-10-06 13:52:56] INFO     Class weights (balanced): {0: 0.608324439701174,
+                               1: 2.8078817733990147}                          
+[2026-10-06 13:53:48] INFO     Class weights (balanced): {0: 0.608985925658607,
+                               1: 2.7938741721854305}                          
