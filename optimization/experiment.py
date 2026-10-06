@@ -55,7 +55,7 @@ METHODS = ("ga", "grid", "manual")
 
 RESULT_FIELDS = [
     "ticker", "method", "seed", "best_hp_json", "val_auc_search",
-    "wf_auc", "wf_f1", "backtest_hit_rate",
+    "wf_auc", "wf_f1", "wf_precision", "wf_recall", "backtest_hit_rate",
     # Hit-rate = benar / sinyal diterbitkan; HOLD tidak masuk penyebut, jadi
     # jumlah sinyal wajib dicatat agar hit-rate antarmetode bisa dibandingkan
     # secara adil (model konservatif otomatis terlihat lebih baik tanpa ini).
@@ -246,8 +246,16 @@ def final_evaluate_and_save(
     output_root: Path,
     seed: int,
     lookback: int = 200,
+    persist_artifacts: bool = True,
 ) -> dict[str, float]:
-    """Full walk-forward on best_hp, train + save winner, backtest hit-rate."""
+    """Full walk-forward on best_hp, train + save winner, backtest hit-rate.
+
+    persist_artifacts=False trains and backtests as usual but does NOT write
+    model.keras / scaler.pkl / fgi_encoder.pkl. Used when repeating the same
+    combination on extra seeds: the thesis needs the spread of metrics across
+    seeds, not a copy of every model, so the first seed's artifacts stay in
+    place and storage does not balloon.
+    """
     import tensorflow as tf
 
     from main import run_backtest  # deferred: main applies its own patches
@@ -262,12 +270,16 @@ def final_evaluate_and_save(
     # --- 1. Reported metrics: full walk-forward validation ----------------- #
     log.info(f"[{ticker}/{method}] Walk-forward final ({final_splits} fold)...")
     report = walk_forward_validate(X_2d, y_1d, eval_cfg)
-    wf_auc = wf_f1 = float("nan")
+    # validator.py menghitung accuracy/precision/recall/f1/auc per fold dan
+    # merangkumnya di baris MEAN — ambil keempat yang dilaporkan di skripsi.
+    wf_auc = wf_f1 = wf_precision = wf_recall = float("nan")
     if not report.empty:
         mean_row = report[report["fold"] == "MEAN"]
         if len(mean_row):
             wf_auc = float(mean_row["auc"].iloc[0])
             wf_f1 = float(mean_row["f1"].iloc[0])
+            wf_precision = float(mean_row["precision"].iloc[0])
+            wf_recall = float(mean_row["recall"].iloc[0])
 
     # --- 2. Train the winning model (chronological split, like run_train) -- #
     log.info(f"[{ticker}/{method}] Training model pemenang...")
@@ -286,12 +298,25 @@ def final_evaluate_and_save(
     )
 
     # --- 3. Save winner to model/optimized/ (baseline untouched) ----------- #
-    out_dir = output_root / "model" / "optimized" / ticker / method
-    save_artifacts(model, scaler, fgi_encoder, ticker, out_dir=out_dir)
-    with open(out_dir / "hyperparams.json", "w", encoding="utf-8") as f:
-        json.dump(
-            {"hp": dict(best_hp), "wf_auc": wf_auc, "wf_f1": wf_f1, "seed": seed},
-            f, indent=2,
+    if persist_artifacts:
+        out_dir = output_root / "model" / "optimized" / ticker / method
+        save_artifacts(model, scaler, fgi_encoder, ticker, out_dir=out_dir)
+        with open(out_dir / "hyperparams.json", "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "hp": dict(best_hp),
+                    "wf_auc": wf_auc,
+                    "wf_f1": wf_f1,
+                    "wf_precision": wf_precision,
+                    "wf_recall": wf_recall,
+                    "seed": seed,
+                },
+                f, indent=2,
+            )
+    else:
+        log.info(
+            f"[{ticker}/{method}] seed {seed}: artefak model dilewati "
+            f"(hanya metrik yang dicatat)"
         )
 
     # --- 4. Backtest hit-rate (reuse main.run_backtest, preloaded model) --- #
@@ -312,6 +337,8 @@ def final_evaluate_and_save(
     return {
         "wf_auc": wf_auc,
         "wf_f1": wf_f1,
+        "wf_precision": wf_precision,
+        "wf_recall": wf_recall,
         "hit_rate": hit_rate,
         "n_signals_issued": n_issued,
         "n_signals_hold": n_hold,
@@ -376,6 +403,8 @@ def run_method(
         "val_auc_search": f"{val_auc:.6f}",
         "wf_auc": f"{final['wf_auc']:.6f}" if np.isfinite(final["wf_auc"]) else "",
         "wf_f1": f"{final['wf_f1']:.6f}" if np.isfinite(final["wf_f1"]) else "",
+        "wf_precision": f"{final['wf_precision']:.6f}" if np.isfinite(final["wf_precision"]) else "",
+        "wf_recall": f"{final['wf_recall']:.6f}" if np.isfinite(final["wf_recall"]) else "",
         "backtest_hit_rate": f"{final['hit_rate']:.6f}" if np.isfinite(final["hit_rate"]) else "",
         "n_signals_issued": _blank_if_nan(final["n_signals_issued"]),
         "n_signals_hold": _blank_if_nan(final["n_signals_hold"]),
