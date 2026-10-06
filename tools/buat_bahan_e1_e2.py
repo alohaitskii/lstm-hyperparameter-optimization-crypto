@@ -106,6 +106,7 @@ def analisis_koin(cfg: dict, ticker: str) -> dict:
     assert raw15.equals(snap), f"{ticker}: data terbaca != snapshot"
 
     feat_df, _ = build_features(bundle, cfg)
+    zero_sma = int((feat_df["vol_sma_20"] == 0).sum())
     f = cfg["features"]
     labeled = add_target(feat_df, f["lookahead_n"], f["move_threshold"])
     sub = labeled[FEATURE_COLUMNS + ["target"]]
@@ -147,6 +148,7 @@ def analisis_koin(cfg: dict, ticker: str) -> dict:
         "n_nolabel": int(no_label.sum()), "lead_by_feat": lead_by_feat,
         "interior_cause": interior_cause,
         "vol_zero": int((raw15["volume"] == 0).sum()),
+        "zero_sma": zero_sma,
         "n_gaps": int(gap.sum()), "win_gap": win_gap, "n_win": n - seq_len,
         "slices": (tr, va, te), "parts": parts,
     }
@@ -160,10 +162,17 @@ def main() -> int:
     seq_len = int(f["sequence_length"])
     L: list[str] = []
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    try:
+        import subprocess
+        head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
+                              capture_output=True, text=True, check=True).stdout.strip()
+    except Exception:  # noqa: BLE001
+        head = "tidak diketahui"
 
     L.append("# Bahan Bab 4 — E1 dan E2 (subbab 4.1.1 dan 4.1.2)\n")
     L.append(
-        f"Dihasilkan oleh `tools/buat_bahan_e1_e2.py` pada {now}. Sumber data: snapshot "
+        f"Dihasilkan oleh `tools/buat_bahan_e1_e2.py` pada {now} dari kode pipeline commit "
+        f"`{head}`. Sumber data: snapshot "
         "`data/snapshot_20260912/` (lihat `MANIFEST.md`), dibaca dalam mode cache-only "
         f"lewat `{CONFIG}` — tidak ada pengunduhan. Setiap berkas yang terbaca diverifikasi "
         "identik dengan snapshot. Tidak ada pelatihan model dalam pembuatan dokumen ini.\n"
@@ -188,7 +197,6 @@ def main() -> int:
         )
     btc = data["BTC-USD"]
     top = sorted(btc["lead_by_feat"].items(), key=lambda kv: -kv[1])[:3]
-    interiors = {t: d["interior"] for t, d in data.items() if d["interior"]}
     L.append("")
     L.append(
         f"Baris pemanasan adalah baris awal yang masih memuat nilai kosong setelah fitur "
@@ -199,34 +207,22 @@ def main() -> int:
         f"Label kosong = {f['lookahead_n']} baris terakhir, karena close(t+{f['lookahead_n']}) "
         f"belum tersedia."
     )
-    if interiors:
-        causes = sorted({c for d in data.values() for c in d["interior_cause"]})
+    L.append(
+        "\n**Volume nol.** Yahoo Finance melaporkan volume 0 untuk sebagian candle 15m. Bila 20 "
+        "candle berturut-turut bervolume 0, SMA-20 volume bernilai 0; pada baris itu `vol_ratio` "
+        "didefinisikan 0 (bukan dibiarkan kosong), tanpa imputasi lain. Karena itu tidak ada baris "
+        "yang dibuang di tengah data, dan baris bersih tetap berurutan 15 menit tanpa celah. "
+        "Indeks waktu data mentah sendiri lengkap.\n"
+    )
+    L.append("| Koin | Candle volume = 0 | Baris SMA-20 volume = 0 (`vol_ratio` = 0) "
+             "| Baris kosong di tengah | Celah pada baris bersih |")
+    L.append("|---|---:|---:|---:|---:|")
+    for t, d in data.items():
         L.append(
-            "\n**Baris kosong di tengah data.** Selain pemanasan di awal, sebagian koin memiliki "
-            "baris kosong di tengah rentang. Penyebabnya hanya fitur "
-            + ", ".join(f"`{c}`" for c in causes)
-            + ": Yahoo Finance melaporkan volume 0 untuk banyak candle 15m. Bila 20 candle "
-            "berturut-turut bervolume 0, `vol_sma_20` bernilai 0 sehingga `vol_ratio` tidak "
-            "terdefinisi dan baris tersebut dibuang oleh `apply_anti_leakage`. Indeks waktunya "
-            "sendiri lengkap (tidak ada celah timestamp pada data mentah).\n"
+            f"| {t} | {fid(d['vol_zero'], 0)} ({pct(d['vol_zero'], d['n_raw'])}) "
+            f"| {d['zero_sma']} | {d['interior']} | {d['n_gaps']} |"
         )
-        L.append("| Koin | Candle volume = 0 | Baris kosong di tengah | Celah pada baris bersih "
-                 "| Jendela 60 baris yang melompati candle |")
-        L.append("|---|---:|---:|---:|---:|")
-        for t, d in data.items():
-            L.append(
-                f"| {t} | {fid(d['vol_zero'], 0)} ({pct(d['vol_zero'], d['n_raw'])}) "
-                f"| {d['interior']} | {d['n_gaps']} "
-                f"| {fid(d['win_gap'], 0)} dari {fid(d['n_win'], 0)} ({pct(d['win_gap'], d['n_win'])}) |"
-            )
-        L.append(
-            "\nKarena baris dibuang (bukan diisi), baris bersih yang berdampingan tidak selalu "
-            "berjarak 15 menit. Jendela yang melompati candle tetap berisi 60 baris berurutan "
-            "secara indeks, tetapi mencakup rentang waktu sedikit lebih panjang dari 15 jam. "
-            "Hal ini perlu disebut di keterbatasan data.\n"
-        )
-    else:
-        L.append("Tidak ada baris kosong di tengah data; semua yang dibuang adalah pemanasan di awal.")
+    L.append("")
     L.append(
         f"\nPembagian 70/15/15 memakai `split_chronological` (kronologis, tanpa pengacakan): "
         f"uji = int(0,15·n), validasi = int(0,15·n), latih = sisanya.\n"
@@ -311,33 +307,47 @@ def main() -> int:
     for i, c in enumerate(FEATURE_COLUMNS, 1):
         L.append(f"| {i} | `{c}` | {fraw(r1[i - 1])} | {fid(n1[i - 1], 6)} | {fraw(r0[i - 1])} | {fid(n0[i - 1], 6)} |")
     L.append("")
-    from data.preprocessor import FGI_CLASSES, _fit_fgi_encoder
+    from data.preprocessor import FGI_CLASSES, FGI_UNKNOWN_CODE, _fit_fgi_encoder
     enc = _fit_fgi_encoder()
-    mapping = {c: int(enc.transform([c])[0]) for c in FGI_CLASSES}
+    mapping = {c: enc.encode(c) for c in FGI_CLASSES}
     L.append(
-        "**Pengodean `fgi_classification_encoded`.** `LabelEncoder` mengurutkan kelas secara "
-        "alfabetis, sehingga kodenya tidak mengikuti tingkat sentimen:\n"
+        "**Pengodean `fgi_classification_encoded`.** Pemetaan ordinal eksplisit mengikuti urutan "
+        f"sentimen (`FGIOrdinalEncoder`); kelas lain diberi kode {FGI_UNKNOWN_CODE}. Encoder ini "
+        "disimpan bersama artefak model (`fgi_encoder.pkl`), sehingga pelatihan, backtest, dan "
+        "inferensi memakai pemetaan yang sama:\n"
     )
-    L.append("| Kelas (urut sentimen) | " + " | ".join(FGI_CLASSES) + " |")
+    L.append("| Kelas | " + " | ".join(FGI_CLASSES) + " |")
     L.append("|---|" + "---:|" * len(FGI_CLASSES))
     L.append("| Kode | " + " | ".join(str(mapping[c]) for c in FGI_CLASSES) + " |")
     L.append(
-        "\nFitur ini dinormalisasi MinMax dan diperlakukan sebagai bilangan oleh model, padahal "
-        "urutannya tidak bermakna (mis. *Extreme Greed* = 1 berada di antara *Extreme Fear* = 0 "
-        "dan *Fear* = 2). Informasi sentimen yang terurut sudah dibawa oleh `fgi_normalized`. "
-        "Di naskah, fitur ini sebaiknya dijelaskan sebagai pengodean label nominal (alfabetis) "
-        "dan dicatat sebagai keterbatasan.\n"
+        "\nSebelumnya kode ini dibuat oleh `LabelEncoder`, yang mengurutkan kelas secara alfabetis "
+        "(*Extreme Greed* = 1, *Neutral* = 4); diperbaiki pada commit `4b230a5`.\n"
     )
     L.append(
-        "> **Penjajaran waktu yang harus ditulis tepat di naskah.** Kode menggeser fitur satu "
-        "langkah (`apply_anti_leakage`) **dan** `create_sequences` mengambil jendela "
-        f"`X[i-{seq_len} : i]` untuk target `y[i]`, sehingga baris t sendiri **tidak** termasuk "
-        f"dalam jendela untuk y(t). Jendela untuk y(t) berisi baris t−{seq_len} … t−1, yang nilai "
-        f"mentahnya berasal dari candle t−{seq_len + 1} … t−2. Jadi model memprediksi apakah "
-        f"close(t+{f['lookahead_n']}) > close(t) × {fid(1 + f['move_threshold'], 3)} dengan "
-        f"informasi terbaru dari candle **t−2**. Ini bukan kebocoran (arahnya lebih konservatif), "
-        "tetapi berarti pergeseran efektifnya dua langkah, bukan satu. Baris fitur di atas "
-        f"masuk ke jendela untuk target y(t+1) … y(t+{seq_len}).\n"
+        "**Penjajaran waktu jendela.** Fitur digeser satu langkah (`apply_anti_leakage`), sehingga "
+        f"baris t berisi nilai candle t−1. Jendela untuk y(t) adalah baris t−{seq_len - 1} … t "
+        "(`sequence_window`, baris t **ikut**), jadi informasi terbaru yang dilihat model berasal "
+        f"dari candle **t−1**, sedangkan label membandingkan close(t+{f['lookahead_n']}) dengan "
+        "close(t). Satu fungsi yang sama membentuk jendela pada pencarian, walk-forward, model "
+        "pemenang, backtest, dan inferensi. Baris fitur pada tabel di atas adalah baris "
+        f"**terakhir** jendela untuk y(t), dan juga muncul di jendela y(t+1) … y(t+{seq_len - 1}).\n"
+    )
+    L.append(kutip("data/preprocessor.py", r"def sequence_window\(", r"return X\[i - sequence_length \+ 1"))
+    L.append(
+        "**Penyelarasan fitur 1 jam.** Yahoo menstempel bar dengan waktu **mulai**: bar 1 jam "
+        "berstempel h menggabungkan candle 15m h, h+15, h+30, h+45 (diverifikasi pada snapshot: "
+        "close bar 1 jam h sama dengan close candle 15m h+45 pada 100% bar) dan baru diketahui saat "
+        "tutup pada h+1 jam. Setiap baris 15m r diketahui saat tutup pada r+15 menit, sehingga "
+        "hanya boleh memakai bar 1 jam terakhir yang sudah tutup saat itu. Contoh: baris 15m 10:15 "
+        "(diketahui 10:30) memakai bar 1 jam 09:00 (tutup 10:00), bukan bar 10:00 yang baru tutup "
+        "11:00. Penggabungan lama berdasarkan stempel mulai membocorkan hingga 45 menit data masa "
+        "depan ke `rsi_1h`, `ema_21_1h`, dan `macd_hist_1h`; diperbaiki pada commit `613e4bd`.\n"
+    )
+    L.append(kutip("data/preprocessor.py", r"by_close = sec\.copy\(\)", r"aligned\.index = primary_15m\.index"))
+    L.append(
+        "Kebenaran penjajaran diuji otomatis oleh `test_penjajaran.py`: semua informasi yang belum "
+        "diketahui pada awal candle t (candle 15m ≥ t, bar 1 jam yang belum tutup, FGI bertanggal "
+        "> t) diganti nilai acak, lalu jendela untuk y(t) harus identik bit demi bit.\n"
     )
 
     # ------------------------------------------------------------------ A.5
@@ -350,7 +360,7 @@ def main() -> int:
     L.append(f"| Latih | {fid(tr.stop - tr.start, 0)} | {Xtr.shape} | {ytr.shape} | {pct(int(ytr.sum()), len(ytr))} |")
     L.append(f"| Validasi | {fid(va.stop - va.start, 0)} | {Xva.shape} | {yva.shape} | {pct(int(yva.sum()), len(yva))} |")
     L.append(
-        f"\nJumlah sekuens = jumlah baris − {seq_len} pada tiap bagian, karena sekuens dibentuk "
+        f"\nJumlah sekuens = n − L + 1 = jumlah baris − {seq_len - 1} pada tiap bagian, karena sekuens dibentuk "
         "**di dalam** masing-masing bagian setelah penskalaan (tidak ada jendela yang melintasi "
         "batas latih/validasi). Dimensi: (sampel, langkah waktu, fitur).\n"
     )
@@ -363,11 +373,13 @@ def main() -> int:
     L.append("|---:|---:|---:|---|---|---|---:|")
     wf = list(TimeSeriesSplit(n_splits=n_splits).split(X_all))
     for k, (a, b) in enumerate(wf, 1):
-        ya = y_all[b][seq_len:]
+        # Bentuk diambil dari create_sequences itu sendiri (penskalaan tak memengaruhi bentuk)
+        Xa_s, _ = create_sequences(X_all[a], y_all[a], seq_len)
+        Xb_s, yb_s = create_sequences(X_all[b], y_all[b], seq_len)
         L.append(
-            f"| {k} | {fid(len(a), 0)} | {fid(len(b), 0)} | ({len(a) - seq_len}, {seq_len}, 25) "
-            f"| ({len(b) - seq_len}, {seq_len}, 25) | {ts(clean.index[b[0]])} – {ts(clean.index[b[-1]])} "
-            f"| {pct(int(ya.sum()), len(ya))} |"
+            f"| {k} | {fid(len(a), 0)} | {fid(len(b), 0)} | {Xa_s.shape} "
+            f"| {Xb_s.shape} | {ts(clean.index[b[0]])} – {ts(clean.index[b[-1]])} "
+            f"| {pct(int(yb_s.sum()), len(yb_s))} |"
         )
     lb = 200
     L.append(
