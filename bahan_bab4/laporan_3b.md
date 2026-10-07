@@ -51,21 +51,19 @@ E1_E2 selama ±1 menit. Kombinasi yang sama memakan 51,3 detik (ETH), 46,4 (LINK
 63,7 (SOL), dan 89,4 (SHIB), sehingga rasio BTC terhadap median koin lain 0,89 —
 tidak ada indikasi pembengkakan.
 
-Waktu GA BTC (53,5 menit) diukur pada run 3a pertama yang terbukti ±40% lebih
-lambat untuk pekerjaan identik; GA BTC dijalankan ulang dari VS Code agar
-sebanding (lihat laporan berikutnya). Angka GA BTC di bawah bersifat sementara.
+GA BTC dijalankan ulang dari terminal VS Code (7 Okt) dengan hasil identik.
+Waktu run ulang (59,9 menit) dipakai apa adanya, lihat `laporan_3a.md` dan
+`logs/archive_ga_btc_run1/README.md`.
 
 ## Pratinjau GA vs Grid (fitness pencarian, satu split)
 
 | Koin | GA: fitness | GA: eval | GA: pencarian | Grid: fitness | Grid: eval | Grid: pencarian |
 |---|---:|---:|---:|---:|---:|---:|
-| BTC-USD | 0,6770 | 46 | 53,5* | 0,6585 | 50 | 65,0 |
+| BTC-USD | 0,6770 | 46 | 59,9 | 0,6585 | 50 | 65,0 |
 | ETH-USD | 0,6650 | 49 | 69,6 | 0,6640 | 50 | 73,6 |
 | SOL-USD | 0,5806 | 45 | 108,0 | 0,5918 | 50 | 75,7 |
 | LINK-USD | 0,5810 | 47 | 50,1 | 0,5824 | 50 | 89,2 |
 | SHIB-USD | 0,6183 | 46 | 71,9 | 0,6154 | 50 | 106,8 |
-
-\* Sementara, menunggu run ulang GA BTC.
 
 Ini fitness **pencarian** pada satu split validasi, bukan metrik yang
 dilaporkan. Perbandingan yang sah adalah walk-forward 3 seed pada Langkah 4.

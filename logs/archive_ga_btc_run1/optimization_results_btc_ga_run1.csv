@@ -1,0 +1,2 @@
+ticker,method,seed,best_hp_json,val_auc_search,wf_auc,wf_f1,wf_precision,wf_recall,backtest_hit_rate,n_signals_issued,n_signals_hold,n_candles_backtest,n_evals,duration_min,search_duration_min,search_epochs,final_splits,timestamp
+BTC-USD,ga,42,"{""sequence_length"": 90, ""lstm_units_1"": 64, ""lstm_units_2"": 16, ""dropout_rate"": 0.1, ""learning_rate"": 0.01, ""batch_size"": 32}",0.677047,0.625875,0.124422,0.069947,0.572770,0.181818,11,189,200,46,57.55,53.52,20,3,2026-10-06T05:27:44+00:00

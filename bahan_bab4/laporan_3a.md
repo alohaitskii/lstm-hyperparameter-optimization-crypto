@@ -5,10 +5,13 @@ MANIFEST). Konfigurasi GA: populasi 10, generasi 6, turnamen 3, crossover 0,8,
 mutasi 0,15, elitisme 2, seed 42, `search_epochs` 20. Fitness = AUC pada satu
 split validasi kronologis.
 
-Run: BTC-USD pada run pertama (6 Okt 11:30–12:33 WIB); ETH, SOL, LINK, SHIB pada
-run lanjutan dari terminal VS Code (6 Okt 14:13–20:40 WIB, 386,9 menit, kode
-keluar 0) setelah run pertama terhenti karena aplikasi Claude ter-restart (lihat
-`logs/archive_terputus/`). Laptop tidak dipakai selama kedua run.
+Run: BTC-USD Manual pada run pertama (6 Okt 11:30 WIB, diluncurkan dari aplikasi
+Claude); ETH, SOL, LINK, SHIB pada run lanjutan dari terminal VS Code (6 Okt
+14:13–20:40 WIB, 386,9 menit, kode keluar 0) setelah run pertama terhenti karena
+aplikasi Claude ter-restart (lihat `logs/archive_terputus/`). GA BTC-USD
+dijalankan ulang dari terminal VS Code (7 Okt 09:32–10:35 WIB, 63,4 menit, kode
+keluar 0) agar cara peluncurannya sama dengan koin lain. Hasil run pertamanya
+diarsipkan di `logs/archive_ga_btc_run1/`.
 
 ## Hasil per koin
 
@@ -17,7 +20,7 @@ evaluasi). Waktu total = pencarian + evaluasi akhir walk-forward + backtest.
 
 | Koin | Metode | Evaluasi | Pencarian (menit) | Total (menit) | Best fitness | best_hp |
 |---|---|---:|---:|---:|---:|---|
-| BTC-USD | GA | 46 | 53,5 | 57,5 | 0,6770 | seq 90, u 64/16, drop 0,1, lr 0,01, bs 32 |
+| BTC-USD | GA | 46 | 59,9 | 63,2 | 0,6770 | seq 90, u 64/16, drop 0,1, lr 0,01, bs 32 |
 | BTC-USD | Manual | 1 | 1,4 | 5,5 | 0,6052 | seq 60, u 128/64, drop 0,2, lr 0,001, bs 32 |
 | ETH-USD | GA | 49 | 69,6 | 78,8 | 0,6650 | seq 90, u 64/32, drop 0,4, lr 0,005, bs 32 |
 | ETH-USD | Manual | 1 | 2,9 | 12,3 | 0,5535 | baseline |
@@ -28,8 +31,8 @@ evaluasi). Waktu total = pencarian + evaluasi akhir walk-forward + backtest.
 | SHIB-USD | GA | 46 | 71,9 | 95,0 | 0,6183 | seq 120, u 128/64, drop 0,1, lr 0,01, bs 32 |
 | SHIB-USD | Manual | 1 | 3,1 | 16,5 | 0,5860 | baseline |
 
-Total pencarian GA lima koin: 353,2 menit untuk 233 evaluasi (rata-rata
-1,52 menit per evaluasi; rincian per evaluasi di `ga_trace_*`).
+Total pencarian GA lima koin: 359,6 menit untuk 233 evaluasi (rata-rata
+1,54 menit per evaluasi; rincian per evaluasi di `ga_trace_*`).
 
 `val_auc_search` Manual identik dengan pengukuran sebelumnya pada pipeline yang
 sama (uji dampak kebocoran dan uji determinisme), sehingga reproduksibilitas
@@ -54,7 +57,15 @@ jejak = baris hasil (fitness di CSV hasil dibulatkan 6 desimal); jumlah
 
 **Reproduksibilitas lintas run.** GA ETH pada run lanjutan mereproduksi
 generasi 0–5 dari run yang terputus secara identik: `ga_history` dan 60 baris
-`ga_trace` (kromosom, fitness, induk, mask, mutasi).
+`ga_trace` (kromosom, fitness, induk, mask, mutasi). GA BTC run ulang identik
+dengan run pertama di seluruh 70 baris jejak, 96 turnamen, `ga_history`,
+backtest, dan baris hasil; hanya waktunya berbeda (pencarian 59,9 vs 53,5
+menit).
+
+**Catatan waktu GA BTC.** Pada 46 evaluasi yang sama, rasio waktu run ulang :
+run pertama bermedian 0,89. Evaluasi 1–11 dan 41–44 run ulang ±1,3–2,3× lebih
+lambat karena laptop sedang dipakai. Waktu run ulang dipakai apa adanya,
+sebagai cerminan kondisi laptop penelitian (keputusan peneliti, 7 Okt 2026).
 
 ## Jendela data
 
