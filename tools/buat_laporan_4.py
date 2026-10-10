@@ -51,6 +51,14 @@ def ms(s: pd.Series, d: int = 4) -> str:
     return f"{fmt(s.mean(), d)} ± {fmt(sd, d)}{tail}"
 
 
+def ms_hit(s: pd.Series) -> str:
+    """Hit-rate: hanya seed yang menerbitkan sinyal (NaN = tanpa sinyal), n selalu ditulis."""
+    n = int(s.notna().sum())
+    if n == 0:
+        return "tidak terdefinisi (n=0)"
+    return ms(s).split(" (n=")[0] + f" (n={n})"
+
+
 def table(head: list[str], rows: list[list[str]], right_from: int = 1) -> str:
     al = ["---" if i < right_from else "---:" for i in range(len(head))]
     out = ["| " + " | ".join(head) + " |", "|" + "|".join(al) + "|"]
@@ -131,17 +139,20 @@ P("**Catatan seed 42.** Metrik reeval seed 42 tidak sama dengan metrik evaluasi 
 # ---- a ------------------------------------------------------------------- #
 P("## a. Metrik walk-forward dan backtest (mean ± std, 3 seed)\n")
 P("AUC, F1, precision, recall = rerata 3 fold walk-forward. Hit-rate = proporsi "
-  "sinyal LONG/SHORT yang benar pada backtest 200 candle; seed tanpa sinyal tidak "
-  "punya hit-rate (n ditulis bila < 3).\n")
+  "sinyal LONG/SHORT yang benar pada backtest 200 candle. Seed tanpa sinyal tidak "
+  "punya hit-rate (tercatat NaN di CSV, bukan 0) dan tidak ikut dihitung; n = jumlah "
+  "seed yang menerbitkan sinyal. Std dengan n = 1 tidak terdefinisi (–).\n")
 MET = [("wf_auc", "AUC"), ("wf_f1", "F1"), ("wf_precision", "Precision"),
        ("wf_recall", "Recall"), ("backtest_hit_rate", "Hit-rate")]
 rows = []
 for t in TICK:
     for m in METH:
         g = ree[(ree.ticker == t) & (ree.method == m)]
-        rows.append([t, NAMA[m]] + [ms(g[c]) for c, _ in MET])
+        rows.append([t, NAMA[m]] + [ms(g[c]) for c, _ in MET[:-1]] + [ms_hit(g["backtest_hit_rate"])])
 P(table(["Koin", "Metode"] + [n for _, n in MET], rows, 2))
-P("\n**Rerata lintas koin** (rerata dari 5 mean per koin; ± = std antar koin):\n")
+P("\n**Rerata lintas koin** (rerata dari 5 mean per koin; ± = std antar koin). "
+  "Hit-rate: rerata dari mean per koin yang terdefinisi; GA tanpa SHIB-USD "
+  "(ketiga seed tanpa sinyal).\n")
 rows = []
 per_coin = ree.groupby(["method", "ticker"])[[c for c, _ in MET]].mean()
 for m in METH:

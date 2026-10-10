@@ -21,27 +21,27 @@ Semua std = simpangan baku sampel (ddof = 1) antar 3 seed. Dihasilkan oleh
 
 ## a. Metrik walk-forward dan backtest (mean ± std, 3 seed)
 
-AUC, F1, precision, recall = rerata 3 fold walk-forward. Hit-rate = proporsi sinyal LONG/SHORT yang benar pada backtest 200 candle; seed tanpa sinyal tidak punya hit-rate (n ditulis bila < 3).
+AUC, F1, precision, recall = rerata 3 fold walk-forward. Hit-rate = proporsi sinyal LONG/SHORT yang benar pada backtest 200 candle. Seed tanpa sinyal tidak punya hit-rate (tercatat NaN di CSV, bukan 0) dan tidak ikut dihitung; n = jumlah seed yang menerbitkan sinyal. Std dengan n = 1 tidak terdefinisi (–).
 
 | Koin | Metode | AUC | F1 | Precision | Recall | Hit-rate |
 |---|---|---:|---:|---:|---:|---:|
-| BTC-USD | GA | 0,6363 ± 0,0137 | 0,1744 ± 0,0547 | 0,1276 ± 0,0748 | 0,4937 ± 0,0344 | 0,1233 ± 0,0034 |
-| BTC-USD | Grid | 0,6478 ± 0,0102 | 0,2117 ± 0,0557 | 0,2116 ± 0,0135 | 0,5339 ± 0,1267 | 0,1363 ± 0,0135 |
-| BTC-USD | Manual | 0,6430 ± 0,0192 | 0,1856 ± 0,0709 | 0,1988 ± 0,0463 | 0,6467 ± 0,0468 | 0,1266 ± 0,0003 |
-| ETH-USD | GA | 0,6082 ± 0,0100 | 0,2763 ± 0,0666 | 0,2148 ± 0,0354 | 0,7807 ± 0,1975 | 0,2434 ± 0,0367 |
-| ETH-USD | Grid | 0,5946 ± 0,0072 | 0,3011 ± 0,0332 | 0,2160 ± 0,0026 | 0,7568 ± 0,1136 | 0,2628 ± 0,0772 |
-| ETH-USD | Manual | 0,6009 ± 0,0133 | 0,1932 ± 0,1575 | 0,1899 ± 0,0468 | 0,4768 ± 0,4142 | 0,2222 ± 0,0000 |
-| SOL-USD | GA | 0,5754 ± 0,0131 | 0,2881 ± 0,0728 | 0,2880 ± 0,0484 | 0,5733 ± 0,1668 | 0,2121 ± 0,0000 |
+| BTC-USD | GA | 0,6363 ± 0,0137 | 0,1744 ± 0,0547 | 0,1276 ± 0,0748 | 0,4937 ± 0,0344 | 0,1233 ± 0,0034 (n=3) |
+| BTC-USD | Grid | 0,6478 ± 0,0102 | 0,2117 ± 0,0557 | 0,2116 ± 0,0135 | 0,5339 ± 0,1267 | 0,1363 ± 0,0135 (n=3) |
+| BTC-USD | Manual | 0,6430 ± 0,0192 | 0,1856 ± 0,0709 | 0,1988 ± 0,0463 | 0,6467 ± 0,0468 | 0,1266 ± 0,0003 (n=3) |
+| ETH-USD | GA | 0,6082 ± 0,0100 | 0,2763 ± 0,0666 | 0,2148 ± 0,0354 | 0,7807 ± 0,1975 | 0,2434 ± 0,0367 (n=3) |
+| ETH-USD | Grid | 0,5946 ± 0,0072 | 0,3011 ± 0,0332 | 0,2160 ± 0,0026 | 0,7568 ± 0,1136 | 0,2628 ± 0,0772 (n=3) |
+| ETH-USD | Manual | 0,6009 ± 0,0133 | 0,1932 ± 0,1575 | 0,1899 ± 0,0468 | 0,4768 ± 0,4142 | 0,2222 ± 0,0000 (n=3) |
+| SOL-USD | GA | 0,5754 ± 0,0131 | 0,2881 ± 0,0728 | 0,2880 ± 0,0484 | 0,5733 ± 0,1668 | 0,2121 ± 0,0000 (n=3) |
 | SOL-USD | Grid | 0,5765 ± 0,0182 | 0,2734 ± 0,0655 | 0,2267 ± 0,0494 | 0,5568 ± 0,0770 | 0,3382 ± 0,1783 (n=2) |
-| SOL-USD | Manual | 0,5706 ± 0,0011 | 0,3330 ± 0,0413 | 0,2670 ± 0,0042 | 0,5676 ± 0,1552 | 0,2121 ± 0,0000 |
-| LINK-USD | GA | 0,5631 ± 0,0092 | 0,3678 ± 0,0464 | 0,3127 ± 0,0087 | 0,6495 ± 0,0809 | 0,2454 ± 0,0510 |
-| LINK-USD | Grid | 0,5592 ± 0,0104 | 0,4250 ± 0,0282 | 0,3140 ± 0,0052 | 0,7202 ± 0,1591 | 0,3176 ± 0,0471 |
+| SOL-USD | Manual | 0,5706 ± 0,0011 | 0,3330 ± 0,0413 | 0,2670 ± 0,0042 | 0,5676 ± 0,1552 | 0,2121 ± 0,0000 (n=3) |
+| LINK-USD | GA | 0,5631 ± 0,0092 | 0,3678 ± 0,0464 | 0,3127 ± 0,0087 | 0,6495 ± 0,0809 | 0,2454 ± 0,0510 (n=3) |
+| LINK-USD | Grid | 0,5592 ± 0,0104 | 0,4250 ± 0,0282 | 0,3140 ± 0,0052 | 0,7202 ± 0,1591 | 0,3176 ± 0,0471 (n=3) |
 | LINK-USD | Manual | 0,5785 ± 0,0042 | 0,3363 ± 0,0588 | 0,3381 ± 0,0363 | 0,5466 ± 0,1323 | 0,3977 ± 0,1446 (n=2) |
-| SHIB-USD | GA | 0,5526 ± 0,0068 | 0,1404 ± 0,1250 | 0,1366 ± 0,1183 | 0,2494 ± 0,2180 | – |
+| SHIB-USD | GA | 0,5526 ± 0,0068 | 0,1404 ± 0,1250 | 0,1366 ± 0,1183 | 0,2494 ± 0,2180 | tidak terdefinisi (n=0) |
 | SHIB-USD | Grid | 0,5547 ± 0,0188 | 0,2208 ± 0,0439 | 0,1854 ± 0,0216 | 0,3792 ± 0,1422 | 0,4148 ± 0,0562 (n=2) |
-| SHIB-USD | Manual | 0,5546 ± 0,0097 | 0,2099 ± 0,0787 | 0,1873 ± 0,0282 | 0,4636 ± 0,1404 | 0,3001 ± 0,0128 |
+| SHIB-USD | Manual | 0,5546 ± 0,0097 | 0,2099 ± 0,0787 | 0,1873 ± 0,0282 | 0,4636 ± 0,1404 | 0,3001 ± 0,0128 (n=3) |
 
-**Rerata lintas koin** (rerata dari 5 mean per koin; ± = std antar koin):
+**Rerata lintas koin** (rerata dari 5 mean per koin; ± = std antar koin). Hit-rate: rerata dari mean per koin yang terdefinisi; GA tanpa SHIB-USD (ketiga seed tanpa sinyal).
 
 | Metode | AUC | F1 | Precision | Recall | Hit-rate |
 |---|---:|---:|---:|---:|---:|
