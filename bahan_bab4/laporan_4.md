@@ -41,13 +41,16 @@ AUC, F1, precision, recall = rerata 3 fold walk-forward. Hit-rate = proporsi sin
 | SHIB-USD | Grid | 0,5547 ± 0,0188 | 0,2208 ± 0,0439 | 0,1854 ± 0,0216 | 0,3792 ± 0,1422 | 0,4148 ± 0,0562 (n=2) |
 | SHIB-USD | Manual | 0,5546 ± 0,0097 | 0,2099 ± 0,0787 | 0,1873 ± 0,0282 | 0,4636 ± 0,1404 | 0,3001 ± 0,0128 (n=3) |
 
-**Rerata lintas koin** (rerata dari 5 mean per koin; ± = std antar koin). Hit-rate: rerata dari mean per koin yang terdefinisi; GA tanpa SHIB-USD (ketiga seed tanpa sinyal).
+**Rerata lintas koin** (rerata dari mean per koin, setiap koin berbobot sama; ± = std antar koin). Baris *5 koin*: semua metrik; hit-rate dari mean per koin yang terdefinisi (GA tanpa SHIB-USD, ketiga seed tanpa sinyal). Baris *4 koin*: hit-rate pada BTC, ETH, SOL, LINK, tempat ketiga metode bersinyal, sehingga ketiga metode dibandingkan pada koin yang sama (mean SOL-USD Grid dan LINK-USD Manual masing-masing dari 2 seed bersinyal).
 
-| Metode | AUC | F1 | Precision | Recall | Hit-rate |
-|---|---:|---:|---:|---:|---:|
-| GA | 0,5871 ± 0,0345 | 0,2494 ± 0,0919 | 0,2160 ± 0,0846 | 0,5493 ± 0,1983 | 0,2061 ± 0,0572 (4 koin) |
-| Grid | 0,5866 ± 0,0377 | 0,2864 ± 0,0859 | 0,2307 ± 0,0490 | 0,5894 ± 0,1529 | 0,2939 ± 0,1036 |
-| Manual | 0,5895 ± 0,0342 | 0,2516 ± 0,0763 | 0,2362 ± 0,0657 | 0,5402 ± 0,0742 | 0,2518 ± 0,1022 |
+| Metode | Cakupan | AUC | F1 | Precision | Recall | Hit-rate |
+|---|---|---:|---:|---:|---:|---:|
+| GA | 5 koin | 0,5871 ± 0,0345 | 0,2494 ± 0,0919 | 0,2160 ± 0,0846 | 0,5493 ± 0,1983 | 0,2061 ± 0,0572 (4 koin) |
+| GA | 4 koin (BTC, ETH, SOL, LINK) |  |  |  |  | 0,2061 ± 0,0572 (4 koin) |
+| Grid | 5 koin | 0,5866 ± 0,0377 | 0,2864 ± 0,0859 | 0,2307 ± 0,0490 | 0,5894 ± 0,1529 | 0,2939 ± 0,1036 |
+| Grid | 4 koin (BTC, ETH, SOL, LINK) |  |  |  |  | 0,2637 ± 0,0907 (4 koin) |
+| Manual | 5 koin | 0,5895 ± 0,0342 | 0,2516 ± 0,0763 | 0,2362 ± 0,0657 | 0,5402 ± 0,0742 | 0,2518 ± 0,1022 |
+| Manual | 4 koin (BTC, ETH, SOL, LINK) |  |  |  |  | 0,2397 ± 0,1138 (4 koin) |
 
 ## b. Sinyal backtest LONG / SHORT / HOLD (200 candle)
 
@@ -70,6 +73,18 @@ AUC, F1, precision, recall = rerata 3 fold walk-forward. Hit-rate = proporsi sin
 | SHIB-USD | Manual | 48,0 | 0,0 | 152,0 | 58/0/142 · 63/0/137 · 23/0/177 |
 
 Total 15 backtest per metode: GA 1132 LONG / 7 SHORT / 1861 HOLD; Grid 977 LONG / 35 SHORT / 1988 HOLD; Manual 1175 LONG / 0 SHORT / 1825 HOLD.
+
+**Rerata per backtest per metode** (rerata dari mean per koin, setiap koin berbobot sama; ± = std antar koin):
+
+| Metode | Cakupan | LONG | SHORT | HOLD | Terbit (LONG+SHORT) | Run tanpa sinyal |
+|---|---|---:|---:|---:|---:|---:|
+| GA | 5 koin | 75,5 ± 47,7 | 0,5 ± 1,0 | 124,1 ± 47,6 | 75,9 ± 47,6 | 3 dari 15 |
+| GA | 4 koin (BTC, ETH, SOL, LINK) | 94,3 ± 25,8 | 0,6 ± 1,2 | 105,1 ± 24,9 | 94,9 ± 24,9 | 0 dari 12 |
+| Grid | 5 koin | 65,1 ± 42,0 | 2,3 ± 3,9 | 132,5 ± 40,4 | 67,5 ± 40,4 | 2 dari 15 |
+| Grid | 4 koin (BTC, ETH, SOL, LINK) | 73,8 ± 43,1 | 2,3 ± 4,5 | 124,0 ± 41,2 | 76,0 ± 41,2 | 1 dari 12 |
+| Manual | 5 koin | 78,3 ± 45,1 | 0,0 ± 0,0 | 121,7 ± 45,1 | 78,3 ± 45,1 | 1 dari 15 |
+| Manual | 4 koin (BTC, ETH, SOL, LINK) | 85,9 ± 48,3 | 0,0 ± 0,0 | 114,1 ± 48,3 | 85,9 ± 48,3 | 1 dari 12 |
+
 Run tanpa sinyal sama sekali: 6 dari 45 (SOL-USD Grid s43, LINK-USD Manual s42, SHIB-USD GA s42, SHIB-USD GA s43, SHIB-USD GA s44, SHIB-USD Grid s42).
 
 ## c. Metrik per fold walk-forward (mean ± std, 3 seed)

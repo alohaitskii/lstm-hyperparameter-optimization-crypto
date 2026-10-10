@@ -150,16 +150,24 @@ for t in TICK:
         g = ree[(ree.ticker == t) & (ree.method == m)]
         rows.append([t, NAMA[m]] + [ms(g[c]) for c, _ in MET[:-1]] + [ms_hit(g["backtest_hit_rate"])])
 P(table(["Koin", "Metode"] + [n for _, n in MET], rows, 2))
-P("\n**Rerata lintas koin** (rerata dari 5 mean per koin; ± = std antar koin). "
-  "Hit-rate: rerata dari mean per koin yang terdefinisi; GA tanpa SHIB-USD "
-  "(ketiga seed tanpa sinyal).\n")
+KOIN4 = ["BTC-USD", "ETH-USD", "SOL-USD", "LINK-USD"]  # ketiga metode bersinyal
+P("\n**Rerata lintas koin** (rerata dari mean per koin, setiap koin berbobot sama; "
+  "± = std antar koin). Baris *5 koin*: semua metrik; hit-rate dari mean per koin "
+  "yang terdefinisi (GA tanpa SHIB-USD, ketiga seed tanpa sinyal). Baris *4 koin*: "
+  "hit-rate pada BTC, ETH, SOL, LINK, tempat ketiga metode bersinyal, sehingga "
+  "ketiga metode dibandingkan pada koin yang sama (mean SOL-USD Grid dan "
+  "LINK-USD Manual masing-masing dari 2 seed bersinyal).\n")
 rows = []
 per_coin = ree.groupby(["method", "ticker"])[[c for c, _ in MET]].mean()
 for m in METH:
     pc = per_coin.loc[m]
-    rows.append([NAMA[m]] + [ms(pc[c]).split(" (n=")[0] + (
+    rows.append([NAMA[m], "5 koin"] + [ms(pc[c]).split(" (n=")[0] + (
         "" if pc[c].notna().sum() == 5 else f" ({pc[c].notna().sum()} koin)") for c, _ in MET])
-P(table(["Metode"] + [n for _, n in MET], rows, 1))
+    h4 = pc.loc[KOIN4, "backtest_hit_rate"]
+    assert h4.notna().all(), (m, h4)
+    rows.append([NAMA[m], "4 koin (BTC, ETH, SOL, LINK)"] + [""] * (len(MET) - 1)
+                + [ms(h4).split(" (n=")[0] + " (4 koin)"])
+P(table(["Metode", "Cakupan"] + [n for _, n in MET], rows, 2))
 P("")
 
 # ---- b ------------------------------------------------------------------- #
@@ -178,6 +186,21 @@ tot = sig.groupby("method")[["LONG", "SHORT", "HOLD"]].sum()
 P("Total 15 backtest per metode: " + "; ".join(
     f"{NAMA[m]} {tot.loc[m, 'LONG']} LONG / {tot.loc[m, 'SHORT']} SHORT / {tot.loc[m, 'HOLD']} HOLD"
     for m in METH) + ".")
+P("\n**Rerata per backtest per metode** (rerata dari mean per koin, setiap koin "
+  "berbobot sama; ± = std antar koin):\n")
+sig["TERBIT"] = sig.LONG + sig.SHORT
+sig_pc = sig.groupby(["method", "ticker"])[["LONG", "SHORT", "HOLD", "TERBIT"]].mean()
+rows = []
+for m in METH:
+    for label, coins in (("5 koin", TICK), ("4 koin (BTC, ETH, SOL, LINK)", KOIN4)):
+        pc = sig_pc.loc[m].loc[coins]
+        n0 = int(((sig.method == m) & sig.ticker.isin(coins) & (sig.TERBIT == 0)).sum())
+        rows.append([NAMA[m], label] + [ms(pc[c], 1).split(" (n=")[0]
+                                        for c in ("LONG", "SHORT", "HOLD", "TERBIT")]
+                    + [f"{n0} dari {3 * len(coins)}"])
+P(table(["Metode", "Cakupan", "LONG", "SHORT", "HOLD", "Terbit (LONG+SHORT)",
+         "Run tanpa sinyal"], rows, 2))
+P("")
 nz = sig[(sig.LONG + sig.SHORT) == 0]
 P(f"Run tanpa sinyal sama sekali: {len(nz)} dari 45 (" +
   ", ".join(f"{r.ticker} {NAMA[r.method]} s{r.seed}" for r in nz.itertuples()) + ").\n")
