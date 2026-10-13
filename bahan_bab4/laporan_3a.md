@@ -17,6 +17,8 @@ diarsipkan di `logs/archive_ga_btc_run1/`.
 
 Waktu pencarian = `search_duration_min` (GA: seluruh pencarian; Manual: satu
 evaluasi). Waktu total = pencarian + evaluasi akhir walk-forward + backtest.
+Waktu dibulatkan ke 1 desimal (setengah ke atas); nilai 2 desimal ada di
+`laporan_4.md` butir i.1.
 
 | Koin | Metode | Evaluasi | Pencarian (menit) | Total (menit) | Best fitness | best_hp |
 |---|---|---:|---:|---:|---:|---|
@@ -26,10 +28,10 @@ evaluasi). Waktu total = pencarian + evaluasi akhir walk-forward + backtest.
 | ETH-USD | Manual | 1 | 2,9 | 12,3 | 0,5535 | baseline |
 | SOL-USD | GA | 45 | 108,0 | 115,7 | 0,5806 | seq 120, u 64/48, drop 0,2, lr 0,01, bs 64 |
 | SOL-USD | Manual | 1 | 3,1 | 8,4 | 0,5486 | baseline |
-| LINK-USD | GA | 47 | 50,1 | 51,6 | 0,5810 | seq 30, u 32/32, drop 0,1, lr 0,0005, bs 64 |
+| LINK-USD | GA | 47 | 50,1 | 51,7 | 0,5810 | seq 30, u 32/32, drop 0,1, lr 0,0005, bs 64 |
 | LINK-USD | Manual | 1 | 1,8 | 6,7 | 0,5379 | baseline |
 | SHIB-USD | GA | 46 | 71,9 | 95,0 | 0,6183 | seq 120, u 128/64, drop 0,1, lr 0,01, bs 32 |
-| SHIB-USD | Manual | 1 | 3,1 | 16,5 | 0,5860 | baseline |
+| SHIB-USD | Manual | 1 | 3,2 | 16,5 | 0,5860 | baseline |
 
 Total pencarian GA lima koin: 359,6 menit untuk 233 evaluasi (rata-rata
 1,54 menit per evaluasi; rincian per evaluasi di `ga_trace_*`).

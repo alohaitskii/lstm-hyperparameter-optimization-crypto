@@ -246,3 +246,47 @@ Selisih = mean wf_auc metode pertama − metode kedua. Std = std antar 3 seed ma
 | SHIB-USD | Grid − Manual | 0,0001 | 0,0188 | 0,0097 | 0,00 | **ya** |
 
 13 dari 15 pasangan tumpang tindih.
+
+## i. Pemeriksaan tambahan
+
+### i.1 Waktu pencarian, 2 desimal
+
+`search_duration_min` apa adanya (2 desimal, seperti di CSV); total = jumlah nilai yang sama. Tabel d, `laporan_3a.md`, dan `laporan_3b.md` menampilkan nilai ini dibulatkan ke 1 desimal (setengah ke atas), sehingga jumlah nilai 1 desimal bisa berbeda 0,1 dari total (mis. Manual: 1,4 + 2,9 + 3,1 + 1,8 + 3,2 = 12,4, sedangkan totalnya 12,34 ≈ 12,3).
+
+| Koin | GA (menit) | Grid (menit) | Manual (menit) |
+|---|---:|---:|---:|
+| BTC-USD | 59,86 | 65,01 | 1,37 |
+| ETH-USD | 69,64 | 73,62 | 2,91 |
+| SOL-USD | 108,03 | 75,72 | 3,13 |
+| LINK-USD | 50,12 | 89,17 | 1,78 |
+| SHIB-USD | 71,90 | 106,79 | 3,15 |
+| **Total** | **359,55** | **410,31** | **12,34** |
+
+### i.2 Fold yang prediksinya runtuh ke satu kelas (ambang 0,5)
+
+Dari `optimization_folds.csv` (135 fold = 45 run × 3 fold). *Semua positif*: recall = 1 dan precision = proporsi label 1 di fold validasi (toleransi 1e-4, karena % label 1 disimpan 4 desimal). *Semua negatif*: recall = 0 dan precision = 0. Keduanya dicek silang dengan accuracy: semua positif ⇒ accuracy = proporsi label 1; semua negatif ⇒ accuracy = 1 − proporsi label 1.
+
+| Koin | GA | Grid | Manual | Semua metode |
+|---|---:|---:|---:|---:|
+| BTC-USD | 2 + 2 = 4 dari 9 | 3 + 1 = 4 dari 9 | 3 + 0 = 3 dari 9 | 8 + 3 = 11 dari 27 |
+| ETH-USD | 4 + 0 = 4 dari 9 | 3 + 0 = 3 dari 9 | 2 + 1 = 3 dari 9 | 9 + 1 = 10 dari 27 |
+| SOL-USD | 2 + 0 = 2 dari 9 | 2 + 1 = 3 dari 9 | 2 + 0 = 2 dari 9 | 6 + 1 = 7 dari 27 |
+| LINK-USD | 1 + 0 = 1 dari 9 | 3 + 0 = 3 dari 9 | 3 + 0 = 3 dari 9 | 7 + 0 = 7 dari 27 |
+| SHIB-USD | 1 + 5 = 6 dari 9 | 1 + 3 = 4 dari 9 | 1 + 3 = 4 dari 9 | 3 + 11 = 14 dari 27 |
+| **Total** | 10 + 7 = 17 dari 45 | 12 + 5 = 17 dari 45 | 11 + 4 = 15 dari 45 | 33 + 16 = 49 dari 135 |
+
+Format sel: semua positif + semua negatif = runtuh dari jumlah fold.
+
+Per nomor fold: fold 1 1 positif / 3 negatif; fold 2 5 positif / 10 negatif; fold 3 27 positif / 3 negatif.
+Hampir runtuh (recall = 1, tetapi ada sedikit prediksi negatif): BTC-USD Manual s42 fold 1 (precision 0,0644 vs proporsi 0,0637).
+AUC fold yang runtuh tetap terdefinisi, karena dihitung dari peringkat probabilitas, bukan dari ambang. Runtuh inilah yang membuat F1/precision/recall bernilai 0 atau recall = 1 pada tabel c.
+
+### i.3 wf_auc BTC-USD Manual seed 42 vs uji determinisme — **belum selesai**
+
+| Sumber | wf_auc |
+|---|---:|
+| `bahan_bab4/uji_determinisme.md` (Langkah 2b, proses baru) | 0,6481331256878202 |
+| `optimization_results.csv`, reeval Langkah 4 (run ke-7 dalam satu proses) | 0,664560 |
+| Jalan ulang walk-forward saja, proses baru, 10 Okt 2026 | 0,6481331256878202 |
+
+Konfigurasi, data snapshot, dan jalur kode sama. Jalan ulang di proses baru mereproduksi angka uji determinisme persis, sehingga angka Langkah 4 berbeda karena sesuatu di dalam proses reeval. Dugaan: keadaan TensorFlow/Keras dari 6 run sebelumnya (GA dan Grid BTC) tidak seluruhnya di-reset oleh `set_global_seed`, sehingga hasil bergantung pada urutan run, tidak hanya pada seed. Pengujian dugaan ini (mengulang urutan Langkah 4 untuk BTC tanpa menulis ke `logs/`) dihentikan sebelum selesai dan **belum dijalankan ulang**. Data hasil tidak diubah. Selisih 0,0164 setara dengan std antar-seed BTC Manual (0,0192).

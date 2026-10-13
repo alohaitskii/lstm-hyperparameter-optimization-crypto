@@ -343,5 +343,81 @@ for t in TICK:
 P(table(["Koin", "Pasangan", "Selisih", "Std pertama", "Std kedua", "Rasio", "Tumpang tindih"], rows, 2))
 P(f"\n{n_ov} dari {len(rows)} pasangan tumpang tindih.\n")
 
+# ---- i ------------------------------------------------------------------- #
+P("## i. Pemeriksaan tambahan\n")
+P("### i.1 Waktu pencarian, 2 desimal\n")
+P("`search_duration_min` apa adanya (2 desimal, seperti di CSV); total = jumlah nilai "
+  "yang sama. Tabel d, `laporan_3a.md`, dan `laporan_3b.md` menampilkan nilai ini "
+  "dibulatkan ke 1 desimal (setengah ke atas), sehingga jumlah nilai 1 desimal bisa "
+  "berbeda 0,1 dari total (mis. Manual: 1,4 + 2,9 + 3,1 + 1,8 + 3,2 = 12,4, sedangkan "
+  "totalnya 12,34 ≈ 12,3).\n")
+rows = []
+tot2 = {m: 0.0 for m in METH}
+for t in TICK:
+    r = [t]
+    for m in METH:
+        v = float(src[(src.ticker == t) & (src.method == m)].search_duration_min.iloc[0])
+        tot2[m] += v
+        r.append(fmt(v, 2))
+    rows.append(r)
+rows.append(["**Total**"] + [f"**{fmt(tot2[m], 2)}**" for m in METH])
+P(table(["Koin", "GA (menit)", "Grid (menit)", "Manual (menit)"], rows, 1))
+P("")
+
+P("### i.2 Fold yang prediksinya runtuh ke satu kelas (ambang 0,5)\n")
+P("Dari `optimization_folds.csv` (135 fold = 45 run × 3 fold). *Semua positif*: "
+  "recall = 1 dan precision = proporsi label 1 di fold validasi (toleransi 1e-4, "
+  "karena % label 1 disimpan 4 desimal). *Semua negatif*: recall = 0 dan "
+  "precision = 0. Keduanya dicek silang dengan accuracy: semua positif ⇒ "
+  "accuracy = proporsi label 1; semua negatif ⇒ accuracy = 1 − proporsi label 1.\n")
+p1 = folds.pct_label1_val / 100
+folds["runtuh"] = ""
+pos = (folds.recall == 1) & ((folds.precision - p1).abs() < 1e-4)
+neg = (folds.recall == 0) & (folds.precision == 0)
+assert ((folds[pos].accuracy - p1[pos]).abs() < 1e-4).all()
+assert ((folds[neg].accuracy - (1 - p1[neg])).abs() < 1e-4).all()
+folds.loc[pos, "runtuh"] = "positif"
+folds.loc[neg, "runtuh"] = "negatif"
+rows = []
+for t in TICK + ["**Total**"]:
+    r = [t]
+    for m in METH:
+        g = folds[folds.method == m] if t == "**Total**" else folds[(folds.ticker == t) & (folds.method == m)]
+        a, b = int((g.runtuh == "positif").sum()), int((g.runtuh == "negatif").sum())
+        r.append(f"{a} + {b} = {a + b} dari {len(g)}")
+    g = folds if t == "**Total**" else folds[folds.ticker == t]
+    a, b = int((g.runtuh == "positif").sum()), int((g.runtuh == "negatif").sum())
+    r.append(f"{a} + {b} = {a + b} dari {len(g)}")
+    rows.append(r)
+P(table(["Koin", "GA", "Grid", "Manual", "Semua metode"], rows, 1))
+P("\nFormat sel: semua positif + semua negatif = runtuh dari jumlah fold.\n")
+per_fold = folds[folds.runtuh != ""].groupby(["fold", "runtuh"]).size().unstack(fill_value=0)
+P("Per nomor fold: " + "; ".join(
+    f"fold {f} {int(per_fold.loc[f].get('positif', 0))} positif / "
+    f"{int(per_fold.loc[f].get('negatif', 0))} negatif" for f in per_fold.index) + ".")
+near = folds[(folds.recall == 1) & ~pos]
+if len(near):
+    P("Hampir runtuh (recall = 1, tetapi ada sedikit prediksi negatif): " + "; ".join(
+        f"{r.ticker} {NAMA[r.method]} s{r.seed} fold {r.fold} (precision {fmt(r.precision)} vs "
+        f"proporsi {fmt(r.pct_label1_val / 100)})" for r in near.itertuples()) + ".")
+P("AUC fold yang runtuh tetap terdefinisi, karena dihitung dari peringkat probabilitas, "
+  "bukan dari ambang. Runtuh inilah yang membuat F1/precision/recall bernilai 0 atau "
+  "recall = 1 pada tabel c.\n")
+P("### i.3 wf_auc BTC-USD Manual seed 42 vs uji determinisme — **belum selesai**\n")
+r42 = ree[(ree.ticker == "BTC-USD") & (ree.method == "manual") & (ree.seed == 42)].wf_auc.iloc[0]
+P("| Sumber | wf_auc |")
+P("|---|---:|")
+P("| `bahan_bab4/uji_determinisme.md` (Langkah 2b, proses baru) | 0,6481331256878202 |")
+P(f"| `optimization_results.csv`, reeval Langkah 4 (run ke-7 dalam satu proses) | {fmt(r42, 6)} |")
+P("| Jalan ulang walk-forward saja, proses baru, 10 Okt 2026 | 0,6481331256878202 |")
+P("\nKonfigurasi, data snapshot, dan jalur kode sama. Jalan ulang di proses baru mereproduksi "
+  "angka uji determinisme persis, sehingga angka Langkah 4 berbeda karena sesuatu di dalam "
+  "proses reeval. Dugaan: keadaan TensorFlow/Keras dari 6 run sebelumnya (GA dan Grid BTC) "
+  "tidak seluruhnya di-reset oleh `set_global_seed`, sehingga hasil bergantung pada urutan "
+  "run, tidak hanya pada seed. Pengujian dugaan ini (mengulang urutan Langkah 4 untuk BTC "
+  "tanpa menulis ke `logs/`) dihentikan sebelum selesai dan **belum dijalankan ulang**. "
+  "Data hasil tidak diubah. Selisih 0,0164 setara dengan std antar-seed BTC Manual "
+  "(0,0192).\n")
+
 OUT.write_text("\n".join(L), encoding="utf-8")
 print(f"Ditulis: {OUT}")
