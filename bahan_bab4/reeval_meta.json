@@ -1,0 +1,10 @@
+{
+  "waktu": "17 Okt 2026, 17.34–20.36 WIB (10:34–13:36 UTC), proses lepas dari terminal",
+  "menit": "181,9",
+  "kondisi": "K2",
+  "kondisi_ket": "affinity proses worker ke P-core (logical 0–7, mask 0xff), oneDNN aktif",
+  "isolasi": true,
+  "perintah": "python optimization/reeval_final.py --seeds 42 43 44 (default --kondisi K2)",
+  "uji_ulang": ["ETH-USD:manual:44", "BTC-USD:ga:43"],
+  "uji_ulang_pemilihan": "random.Random(20261017).sample(45 kombinasi, 2)"
+}
