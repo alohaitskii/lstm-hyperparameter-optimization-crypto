@@ -1,0 +1,19 @@
+{
+ "fitness_proses_baru": [
+  {
+   "method": "manual",
+   "auc": 0.6052449965493444,
+   "val_auc_search": 0.605245
+  },
+  {
+   "method": "ga",
+   "auc": 0.6770470719368944,
+   "val_auc_search": 0.677047
+  },
+  {
+   "method": "grid",
+   "auc": 0.6584589397089397,
+   "val_auc_search": 0.658459
+  }
+ ]
+}
