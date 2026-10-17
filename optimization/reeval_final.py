@@ -43,6 +43,20 @@ MULTI-SEED
     dilatih dan di-backtest, tetapi hanya metriknya yang dicatat — hemat waktu
     tulis dan penyimpanan, dan artefak seed pertama tidak ikut tertimpa.
 
+KONDISI NUMERIK (--kondisi)
+    TensorFlow 2.21 di CPU hibrida (Intel i5-12450H, P-core + E-core) dengan
+    oneDNN aktif terbukti memberi dua hasil berbeda untuk konfigurasi dan seed
+    yang sama, juga di proses baru (bahan_bab4/uji_isolasi_urutan.md). Kondisi
+    yang membuat hasil identik dipilih oleh tools/uji_penyebab.py dan dipasang
+    pada setiap worker sebelum TensorFlow diimpor.
+
+ISOLASI PROSES (default)
+    Setiap run (ticker x metode x seed) dijalankan di subprocess Python baru
+    (`--worker`, dengan kondisi numerik di atas), lalu proses induk menulis
+    baris CSV-nya. Setiap run mulai dari keadaan TensorFlow/Keras yang sama,
+    sehingga hasilnya hanya bergantung pada konfigurasi, seed, dan kondisi.
+    `--tanpa-isolasi` mengembalikan perilaku lama (semua run satu proses, K1).
+
 Usage:
     python optimization/reeval_final.py --tickers BTC-USD --methods manual
     python optimization/reeval_final.py --seeds 42 43 44
@@ -53,7 +67,9 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -70,6 +86,17 @@ if sys.platform == "win32":
             _stream.reconfigure(encoding="utf-8", errors="replace")
         except Exception:  # noqa: BLE001
             pass
+
+# Kondisi numerik worker (lihat KONDISI NUMERIK di docstring) harus dipasang
+# SEBELUM TensorFlow diimpor (lewat `import main` di bawah). Induk meneruskannya
+# lewat variabel lingkungan REEVAL_KONDISI.
+import os  # noqa: E402
+
+sys.path.insert(0, str(ROOT / "tools"))
+from uji_penyebab import terapkan_kondisi_awal, terapkan_kondisi_tf  # noqa: E402
+
+_KONDISI = os.environ.get("REEVAL_KONDISI", "")
+_KONDISI_INFO = terapkan_kondisi_awal(_KONDISI) if _KONDISI else {}
 
 import numpy as np  # noqa: E402
 from rich.console import Console  # noqa: E402
@@ -113,7 +140,86 @@ def parse_args() -> argparse.Namespace:
                    help="Lookback backtest (default 200, sama seperti run asli)")
     p.add_argument("--config", default="config_snapshot_20260912.yaml",
                    help="Path config YAML (default: snapshot beku, mode cache-only)")
+    p.add_argument("--tanpa-isolasi", action="store_true",
+                   help="Jalankan semua run dalam satu proses (perilaku lama). Default: "
+                        "setiap run di subprocess baru agar hasil tidak bergantung urutan.")
+    p.add_argument("--kondisi", choices=["K1", "K2", "K3"], default=KONDISI_DEFAULT,
+                   help="Kondisi numerik worker (default %(default)s): K1 = bawaan, "
+                        "K2 = affinity P-core, K3 = oneDNN mati + op determinism. "
+                        "Lihat bahan_bab4/uji_penyebab.md.")
+    p.add_argument("--worker", default=None, help=argparse.SUPPRESS)
     return p.parse_args()
+
+
+# Kondisi numerik terpilih oleh tools/uji_penyebab.py (bahan_bab4/uji_penyebab.md)
+KONDISI_DEFAULT = "K2"
+
+# Kode keluar worker bila cache snapshot tidak lengkap (induk menghentikan semua run)
+WORKER_EXIT_CACHE = 3
+
+
+def _jsonable(v):
+    if isinstance(v, dict):
+        return {k: _jsonable(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple)):
+        return [_jsonable(x) for x in v]
+    return v.item() if hasattr(v, "item") else v
+
+
+def _run_one(cfg, ticker, method, best_hp, seed, persist, lookback, output_root,
+             data_cache: dict) -> dict:
+    """Satu evaluasi akhir: seed global disetel, data dimuat bila belum, lalu
+    final_evaluate_and_save. Dipakai mode isolasi (di worker) dan tanpa isolasi."""
+    set_global_seed(seed)  # determinisme per seed
+    if ticker not in data_cache:
+        data_cache[ticker] = prepare_ticker_data(cfg, ticker)
+    data = data_cache[ticker]
+    return final_evaluate_and_save(
+        ticker, method, best_hp,
+        data["X"], data["y"], data["fgi_encoder"],
+        cfg, output_root, seed, lookback,
+        persist_artifacts=persist, bundle=data["bundle"],
+    )
+
+
+def _worker(args: argparse.Namespace) -> int:
+    """Subprocess: jalankan satu run dari berkas job, tulis hasil ke <job>.hasil.json."""
+    job_path = Path(args.worker)
+    job = json.loads(job_path.read_text(encoding="utf-8"))
+    cfg = load_config(args.config)
+    setup_logger(level=cfg.get("logging", {}).get("log_level", "INFO"))
+    terapkan_kondisi_tf(_KONDISI, _KONDISI_INFO)
+    get_logger().info(f"Kondisi numerik worker: {_KONDISI_INFO or 'K1 (bawaan)'}")
+    try:
+        final = _run_one(cfg, job["ticker"], job["method"], job["best_hp"], job["seed"],
+                         job["persist"], job["lookback"], Path(job["output_root"]), {})
+    except CacheMissingError as exc:
+        console.print(f"[red]{exc}[/red]")
+        return WORKER_EXIT_CACHE
+    job_path.with_suffix(".hasil.json").write_text(
+        json.dumps(_jsonable(final)), encoding="utf-8")
+    return 0
+
+
+def _run_isolated(args, ticker, method, best_hp, seed, persist, output_root,
+                  tmp_dir: Path) -> dict:
+    job_path = tmp_dir / f"job_{ticker}_{method}_{seed}.json"
+    job_path.write_text(json.dumps({
+        "ticker": ticker, "method": method, "best_hp": best_hp, "seed": seed,
+        "persist": persist, "lookback": args.lookback, "output_root": str(output_root),
+    }), encoding="utf-8")
+    env = {k: v for k, v in os.environ.items() if k != "TF_ENABLE_ONEDNN_OPTS"}
+    env["REEVAL_KONDISI"] = args.kondisi
+    proc = subprocess.run(
+        [sys.executable, str(Path(__file__).resolve()), "--config", args.config,
+         "--worker", str(job_path)],
+        cwd=ROOT, env=env,
+    )
+    if proc.returncode == WORKER_EXIT_CACHE:
+        raise CacheMissingError(f"{ticker}: cache snapshot tidak lengkap (worker)")
+    if proc.returncode != 0:
+        raise RuntimeError(f"worker keluar dengan kode {proc.returncode}")
+    return json.loads(job_path.with_suffix(".hasil.json").read_text(encoding="utf-8"))
 
 
 def _fmt(v: float) -> str:
@@ -151,6 +257,8 @@ def select_source_rows(
 
 def main() -> int:
     args = parse_args()
+    if args.worker:
+        return _worker(args)
     cfg = load_config(args.config)
     setup_logger(level=cfg.get("logging", {}).get("log_level", "INFO"))
     log = get_logger()
@@ -195,6 +303,15 @@ def main() -> int:
         )
     else:
         console.print("Seed: mengikuti baris sumber\n")
+    isolate = not args.tanpa_isolasi
+    if not isolate and args.kondisi != "K1":
+        raise SystemExit("--tanpa-isolasi hanya untuk kondisi K1 (kondisi dipasang per worker)")
+    console.print(f"Kondisi numerik: {args.kondisi}")
+    console.print(
+        "Isolasi: setiap run di subprocess baru\n" if isolate
+        else "[yellow]Tanpa isolasi: semua run dalam satu proses[/yellow]\n"
+    )
+    tmp_dir = Path(tempfile.mkdtemp(prefix="reeval_jobs_"))
 
     results: list[dict] = []
     data_cache: dict[str, dict] = {}
@@ -220,17 +337,12 @@ def main() -> int:
             )
             t0 = time.time()
             try:
-                set_global_seed(seed)  # determinisme per seed
-                if ticker not in data_cache:
-                    data_cache[ticker] = prepare_ticker_data(cfg, ticker)
-                data = data_cache[ticker]
-
-                final = final_evaluate_and_save(
-                    ticker, method, best_hp,
-                    data["X"], data["y"], data["fgi_encoder"],
-                    cfg, output_root, seed, args.lookback,
-                    persist_artifacts=persist, bundle=data["bundle"],
-                )
+                if isolate:
+                    final = _run_isolated(args, ticker, method, best_hp, seed, persist,
+                                          output_root, tmp_dir)
+                else:
+                    final = _run_one(cfg, ticker, method, best_hp, seed, persist,
+                                     args.lookback, output_root, data_cache)
             except KeyboardInterrupt:
                 console.print(
                     "\n[yellow]Dihentikan — baris yang sudah selesai tetap tersimpan.[/yellow]"
