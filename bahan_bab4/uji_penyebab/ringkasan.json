@@ -1,0 +1,13 @@
+{
+ "lulus_manual": {
+  "K1": false,
+  "K2": true,
+  "K3": false
+ },
+ "lulus_grid": {
+  "K2": true
+ },
+ "pilih": "K2",
+ "menit": 124.7,
+ "selesai_utc": "2026-10-17 10:31"
+}
