@@ -113,7 +113,8 @@ def main() -> int:
     P(f"## b. Jendela backtest ({LOOKBACK} baris bersih terakhir)\n")
     P("Rumus `main.run_backtest`: indeks `max(L − 1, n − 200)` … `n − 1`. Karena n jauh lebih "
       "besar dari L, jendela = 200 baris terakhir untuk semua konfigurasi. Timestamp dicocokkan "
-      "dengan 45 berkas backtest reeval (`logs/backtest_*_20261009_*.csv`).\n")
+      "dengan seluruh 60 berkas backtest di `logs/` (per koin 3 dari tahap pencarian dan 9 "
+      "dari reeval final).\n")
     P("| Koin | Indeks | Awal | Akhir | % label 1 | Di bagian uji 70/15/15? | Di blok uji fold 3? |")
     P("|---|---|---|---|---:|---|---|")
     fgi_rows = []
@@ -123,8 +124,8 @@ def main() -> int:
         d = D[t]
         idx, y, n = d["index"], d["y"], len(d["y"])
         w = np.arange(n - LOOKBACK, n)
-        files = glob.glob(str(ROOT / "logs" / f"backtest_{t.replace('-', '_')}_*_20261009_*.csv"))
-        assert len(files) == 9, (t, len(files))
+        files = glob.glob(str(ROOT / "logs" / f"backtest_{t.replace('-', '_')}_*.csv"))
+        assert len(files) == 12, (t, len(files))
         for f in files:
             bt = pd.read_csv(f)
             bts = pd.to_datetime(bt["timestamp"], utc=True)

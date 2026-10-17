@@ -91,12 +91,16 @@ assert len(folds) == 135 and not folds.duplicated(["ticker", "method", "seed", "
 sig_rows = []
 for t in TICK:
     for m in METH:
-        fs = sorted(glob.glob(str(LOGS / f"backtest_{t.replace('-', '_')}_{m}_20261009_*.csv")))
-        assert len(fs) == 3, (t, m, fs)
+        # logs/ juga memuat backtest tahap pencarian: pasangkan tiap baris reeval dengan
+        # berkas yang stempel namanya paling dekat ke timestamp baris (< 90 detik)
+        cand = sorted(glob.glob(str(LOGS / f"backtest_{t.replace('-', '_')}_{m}_*.csv")))
+        stamps = {f: pd.Timestamp(Path(f).stem[-15:].replace("_", "T"), tz="UTC") for f in cand}
         rows = ree[(ree.ticker == t) & (ree.method == m)].sort_values("ts")
-        for f, (_, r) in zip(fs, rows.iterrows()):
-            stamp = pd.Timestamp(Path(f).stem[-15:].replace("_", "T"), tz="UTC")
-            assert abs((stamp - r.ts).total_seconds()) < 90, (f, r.ts)
+        used = set()
+        for _, r in rows.iterrows():
+            f = min(cand, key=lambda x: abs((stamps[x] - r.ts).total_seconds()))
+            assert abs((stamps[f] - r.ts).total_seconds()) < 90 and f not in used, (f, r.ts)
+            used.add(f)
             bt = pd.read_csv(f)
             vc = bt["signal"].value_counts()
             n_iss = int(vc.get("LONG", 0) + vc.get("SHORT", 0))
@@ -113,7 +117,10 @@ P("Data: `data/snapshot_20260912/` (cache-only, diverifikasi terhadap MANIFEST).
 P("Setiap konfigurasi terpilih (GA, Grid, Manual; 5 koin) dievaluasi ulang dengan")
 P("`optimization/reeval_final.py --seeds 42 43 44`: walk-forward 3 fold")
 P("(`TimeSeriesSplit`, maks. 100 epoch, patience 10) + backtest 200 candle.")
-P(f"Run dari terminal VS Code, 9 Okt 17:45–22:16 WIB (271,4 menit, kode keluar 0).\n")
+META = json.loads((ROOT / "bahan_bab4" / "reeval_meta.json").read_text(encoding="utf-8"))
+P(f"Run: {META['waktu']} ({META['menit']} menit, kode keluar 0). Kondisi numerik "
+  f"**{META['kondisi']}** ({META['kondisi_ket']}); isolasi subprocess per run: "
+  f"**{'ya' if META['isolasi'] else 'tidak'}**. Lihat butir i.3.\n")
 P("Semua std = simpangan baku sampel (ddof = 1) antar 3 seed. Dihasilkan oleh")
 P("`tools/buat_laporan_4.py`.\n")
 
@@ -130,11 +137,10 @@ d42 = mrg[mrg.seed == 42]
 dd = (d42.wf_auc - d42.wf_auc_src).abs()
 P("**Catatan seed 42.** Metrik reeval seed 42 tidak sama dengan metrik evaluasi akhir "
   "pada baris pencarian (selisih |wf_auc| maks. "
-  f"{fmt(dd.max())}, median {fmt(dd.median())}). Penyebabnya, evaluasi akhir di "
-  "`run_optimization.py` berjalan langsung sesudah pencarian tanpa reset seed, "
-  "sehingga keadaan RNG-nya bergantung pada jalannya pencarian. `reeval_final.py` "
-  "memanggil `set_global_seed(seed)` tepat sebelum setiap evaluasi, sehingga "
-  "terdeterminasi oleh seed saja. Angka yang dilaporkan adalah 45 baris reeval.\n")
+  f"{fmt(dd.max())}, median {fmt(dd.median())}). Evaluasi akhir di `run_optimization.py` "
+  "berjalan langsung sesudah pencarian tanpa reset seed, dan dengan kondisi numerik K1 "
+  "yang terbukti tidak deterministik antarproses (butir i.3). Angka yang dilaporkan adalah "
+  "45 baris reeval.\n")
 
 # ---- a ------------------------------------------------------------------- #
 P("## a. Metrik walk-forward dan backtest (mean ± std, 3 seed)\n")
@@ -150,13 +156,17 @@ for t in TICK:
         g = ree[(ree.ticker == t) & (ree.method == m)]
         rows.append([t, NAMA[m]] + [ms(g[c]) for c, _ in MET[:-1]] + [ms_hit(g["backtest_hit_rate"])])
 P(table(["Koin", "Metode"] + [n for _, n in MET], rows, 2))
-KOIN4 = ["BTC-USD", "ETH-USD", "SOL-USD", "LINK-USD"]  # ketiga metode bersinyal
+KOIN4 = ["BTC-USD", "ETH-USD", "SOL-USD", "LINK-USD"]  # cakupan tetap (keputusan peneliti)
+hit_n = ree.groupby(["ticker", "method"]).backtest_hit_rate.apply(lambda s: int(s.notna().sum()))
+tak_def = [f"{t} {NAMA[m]}" for (t, m), n in hit_n.items() if n == 0]
+kurang = [f"{t} {NAMA[m]} (n={n})" for (t, m), n in hit_n.items() if 0 < n < 3]
 P("\n**Rerata lintas koin** (rerata dari mean per koin, setiap koin berbobot sama; "
-  "± = std antar koin). Baris *5 koin*: semua metrik; hit-rate dari mean per koin "
-  "yang terdefinisi (GA tanpa SHIB-USD, ketiga seed tanpa sinyal). Baris *4 koin*: "
-  "hit-rate pada BTC, ETH, SOL, LINK, tempat ketiga metode bersinyal, sehingga "
-  "ketiga metode dibandingkan pada koin yang sama (mean SOL-USD Grid dan "
-  "LINK-USD Manual masing-masing dari 2 seed bersinyal).\n")
+  "± = std antar koin). Baris *5 koin*: semua metrik; hit-rate dari mean per koin yang "
+  "terdefinisi"
+  + (f" (tidak terdefinisi: {', '.join(tak_def)})" if tak_def else " (terdefinisi di kelima koin)")
+  + ". Baris *4 koin*: hit-rate pada BTC, ETH, SOL, LINK, cakupan yang ditetapkan saat SHIB-USD "
+  "GA tidak bersinyal pada reeval lama; dipertahankan agar sebanding. Mean per koin dengan "
+  "seed bersinyal < 3: " + (", ".join(kurang) if kurang else "tidak ada") + ".\n")
 rows = []
 per_coin = ree.groupby(["method", "ticker"])[[c for c, _ in MET]].mean()
 for m in METH:
@@ -204,6 +214,13 @@ P("")
 nz = sig[(sig.LONG + sig.SHORT) == 0]
 P(f"Run tanpa sinyal sama sekali: {len(nz)} dari 45 (" +
   ", ".join(f"{r.ticker} {NAMA[r.method]} s{r.seed}" for r in nz.itertuples()) + ").\n")
+ss = sig[sig.SHORT > 0]
+P("**Catatan penilaian SHORT.** `main.run_backtest` menilai LONG tepat bila label = 1 (harga naik "
+  "≥ 0,3% dalam 4 candle), tetapi SHORT tepat bila label = 0, yaitu cukup bila harga *tidak* naik "
+  "≥ 0,3%. Karena 70–90% candle berlabel 0, kriteria SHORT jauh lebih longgar, sehingga hit-rate "
+  "run yang banyak menerbitkan SHORT tidak sebanding dengan run yang hanya LONG. Run dengan "
+  "SHORT: " + (", ".join(f"{r.ticker} {NAMA[r.method]} s{r.seed} ({r.SHORT} SHORT)"
+                         for r in ss.itertuples()) if len(ss) else "tidak ada") + ".\n")
 
 # ---- c ------------------------------------------------------------------- #
 P("## c. Metrik per fold walk-forward (mean ± std, 3 seed)\n")
@@ -403,21 +420,97 @@ if len(near):
 P("AUC fold yang runtuh tetap terdefinisi, karena dihitung dari peringkat probabilitas, "
   "bukan dari ambang. Runtuh inilah yang membuat F1/precision/recall bernilai 0 atau "
   "recall = 1 pada tabel c.\n")
-P("### i.3 wf_auc BTC-USD Manual seed 42 vs uji determinisme — **belum selesai**\n")
-r42 = ree[(ree.ticker == "BTC-USD") & (ree.method == "manual") & (ree.seed == 42)].wf_auc.iloc[0]
-P("| Sumber | wf_auc |")
-P("|---|---:|")
-P("| `bahan_bab4/uji_determinisme.md` (Langkah 2b, proses baru) | 0,6481331256878202 |")
-P(f"| `optimization_results.csv`, reeval Langkah 4 (run ke-7 dalam satu proses) | {fmt(r42, 6)} |")
-P("| Jalan ulang walk-forward saja, proses baru, 10 Okt 2026 | 0,6481331256878202 |")
-P("\nKonfigurasi, data snapshot, dan jalur kode sama. Jalan ulang di proses baru mereproduksi "
-  "angka uji determinisme persis, sehingga angka Langkah 4 berbeda karena sesuatu di dalam "
-  "proses reeval. Dugaan: keadaan TensorFlow/Keras dari 6 run sebelumnya (GA dan Grid BTC) "
-  "tidak seluruhnya di-reset oleh `set_global_seed`, sehingga hasil bergantung pada urutan "
-  "run, tidak hanya pada seed. Pengujian dugaan ini (mengulang urutan Langkah 4 untuk BTC "
-  "tanpa menulis ke `logs/`) dihentikan sebelum selesai dan **belum dijalankan ulang**. "
-  "Data hasil tidak diubah. Selisih 0,0164 setara dengan std antar-seed BTC Manual "
-  "(0,0192).\n")
+P("### i.3 Ketidakdeterministikan evaluasi akhir antarproses\n")
+UI = ROOT / "bahan_bab4" / "uji_isolasi"
+UP = ROOT / "bahan_bab4" / "uji_penyebab"
+uru = json.loads((UI / "urutan.json").read_text(encoding="utf-8"))
+ter = json.loads((UI / "terpisah.json").read_text(encoding="utf-8"))["runs"][0]
+iso = json.loads((UI / "isolasi.json").read_text(encoding="utf-8"))["runs"]
+fit = json.loads((UI / "fitness.json").read_text(encoding="utf-8"))["fitness_proses_baru"]
+ring = json.loads((UP / "ringkasan.json").read_text(encoding="utf-8"))
+pen = [json.loads(f.read_text(encoding="utf-8")) | {"_nama": f.stem}
+       for f in sorted(UP.glob("*_K*_*.json"))]
+L4_LAMA = {"wf_auc": 0.6645601584570779, "sinyal": "142/58"}
+
+P("**Masalah.** BTC-USD Manual seed 42 (konfigurasi, data snapshot, dan jalur kode sama) "
+  "memberi wf_auc 0,648133 dan 13 sinyal pada uji determinisme Langkah 2b, tetapi 0,664560 dan "
+  "142 sinyal pada reeval Langkah 4 (9 Okt, run ke-7 dalam satu proses).\n")
+P("**Uji 1 — urutan run** (`bahan_bab4/uji_isolasi_urutan.md`). Urutan Langkah 4 untuk BTC "
+  "diulang dalam satu proses:")
+P(f"- GA s42–s44 (posisi 1–3) identik dengan Langkah 4; Grid s42–s44 (posisi 4–6) tidak; "
+  f"Manual s42 di posisi 7 = {fmt(uru['runs'][-1]['wf_auc'], 6)}, identik dengan proses "
+  f"terpisah ({fmt(ter['wf_auc'], 6)}; AUC per fold, sinyal, dan 200 probabilitas sama). "
+  "Urutan run tidak mengubah hasil Manual s42.")
+P("- Fitness pencarian (Manual, GA terbaik, Grid terbaik) identik dengan `val_auc_search`, di "
+  "proses baru maupun setelah 7 evaluasi akhir: "
+  + ", ".join(f"{x['method']} {fmt(x['auc'], 6)}" for x in fit) + ". **Tahap pencarian tidak "
+  "terdampak.**")
+iso_m = [r for r in iso if r["method"] == "manual"]
+P(f"- Isolasi subprocess tidak cukup: Manual s42 di dua subprocess baru memberi "
+  + " dan ".join(f"{fmt(r['wf_auc'], 6)} ({r['n_signals_issued']}/{r['n_signals_hold']})" for r in iso_m)
+  + "; yang kedua sama persis dengan angka Langkah 4.\n")
+
+P("**Uji 2 — penyebab** (`bahan_bab4/uji_penyebab.md`). Setiap run = evaluasi akhir lengkap di "
+  "proses Python baru; kondisi dipasang sebelum TensorFlow diimpor; putaran bergiliran. CPU: "
+  "Intel Core i5-12450H (4 P-core + 4 E-core).\n")
+KET3 = {"K1": "bawaan (oneDNN aktif)", "K2": "affinity P-core, oneDNN aktif",
+        "K3": "oneDNN mati + `enable_op_determinism()`"}
+rows = []
+for method, n in (("manual", 8), ("grid", 4)):
+    for k in ("K1", "K2", "K3"):
+        rs = [r for r in pen if r["method"] == method and r["kondisi"] == k]
+        if not rs:
+            continue
+        grup: dict = {}
+        for r in rs:
+            key = (r["wf_auc"], tuple(r["fold_auc"]), r["n_signals_issued"], r["n_signals_hold"], tuple(r["prob"]))
+            grup.setdefault(key, 0)
+            grup[key] += 1
+        hasil = "; ".join(f"{fmt(key[0], 6)} ({key[2]}/{key[3]}) × {c}"
+                          for key, c in sorted(grup.items(), key=lambda kv: -kv[1]))
+        rows.append([f"{'Manual' if method == 'manual' else 'Grid'} s42", f"{k}: {KET3[k]}",
+                     f"{len(rs)}", hasil, "**ya**" if len(grup) == 1 and len(rs) == n else "tidak"])
+P(table(["Run", "Kondisi", "Run", "Hasil (wf_auc, terbit/HOLD) × kemunculan", "Identik semua"], rows, 2))
+P("")
+semua = {}
+for r in pen:
+    if r["method"] == "manual" and r["kondisi"] == "K1":
+        semua[r["wf_auc"]] = semua.get(r["wf_auc"], 0) + 1
+P("Rekap kemunculan Manual s42 kondisi K1 (bawaan) di semua uji: uji determinisme 2×, cek "
+  "10 Okt 1×, uji urutan 2× (proses terpisah, posisi 7), dan isolasi 1× memberi 0,648133; "
+  "Langkah 4 1× dan isolasi 1× memberi 0,664560; uji penyebab K1: "
+  + "; ".join(f"{fmt(v, 6)} × {c}" for v, c in sorted(semua.items())) + ".\n")
+
+if ring["pilih"]:
+    k = ring["pilih"]
+    P(f"**Kesimpulan dan perbaikan.** Penyebabnya adalah ketidakdeterministikan numerik antarproses "
+      f"yang tidak dikendalikan seed, bukan urutan run. Pola hasilnya konsisten dengan pemilihan "
+      f"jalur komputasi yang berbeda antara P-core dan E-core pada CPU hibrida (dugaan; mekanisme "
+      f"internalnya tidak diuji langsung). Mematikan oneDNN (K3) tidak menghilangkannya. Kondisi "
+      f"**{k}** ({KET3[k]}) memberi hasil identik pada semua run Manual dan Grid, sehingga dipakai "
+      f"untuk evaluasi akhir final: `reeval_final.py --kondisi {k}`, setiap run di subprocess baru. "
+      f"Tahap pencarian tidak diulang: pencarian berjalan dengan kondisi bawaan, dan fitness "
+      f"terbukti stabil. 45 baris, 135 fold, dan 45 backtest reeval lama diarsipkan di "
+      f"`logs/archive_reeval_tanpa_isolasi/`.\n")
+    P("**Batas bukti.** Pada K1 hasil menyimpang muncul 1 dari 8 run (secara keseluruhan 2 dari 12 "
+      "run Manual s42 yang masing-masing dimulai di proses baru: cek 10 Okt, proses terpisah, "
+      "2 isolasi, 8 uji penyebab). Bila K2 sebenarnya tidak lebih baik dari K1, peluang mendapat 8/8 identik "
+      "secara kebetulan kira-kira (7/8)^8 ≈ 0,34. Jadi 8/8 + 4/4 adalah bukti pendukung, belum "
+      "jaminan. Karena itu reeval final juga diverifikasi dengan menjalankan ulang dua kombinasi "
+      "acak di proses terpisah (di bawah), dan BTC-USD Manual s42 dibandingkan dengan acuan K2.\n")
+    ulang = ROOT / "bahan_bab4" / "uji_ulang_reeval.md"
+    if ulang.exists():
+        P("**Verifikasi reeval final.** Dua kombinasi acak dijalankan ulang di proses terpisah "
+          "dengan kondisi yang sama (`bahan_bab4/uji_ulang_reeval.md`): "
+          + ("identik" if "LULUS" in ulang.read_text(encoding="utf-8") else "**tidak identik**")
+          + ". BTC-USD Manual s42 pada reeval final: "
+          f"{fmt(ree[(ree.ticker == 'BTC-USD') & (ree.method == 'manual') & (ree.seed == 42)].wf_auc.iloc[0], 6)}.\n")
+else:
+    P("**Kesimpulan.** Penyebabnya ketidakdeterministikan numerik antarproses yang tidak "
+      "dikendalikan seed, bukan urutan run. Baik K2 maupun K3 tidak memberi hasil identik, "
+      "sehingga tidak ada evaluasi ulang: 45 baris reeval Langkah 4 dipertahankan apa adanya. "
+      "Ketidakdeterministikan ini bersifat seperti variasi seed tambahan; angka per run tidak "
+      "dapat direproduksi persis, tetapi tahap pencarian (fitness) stabil.\n")
 
 OUT.write_text("\n".join(L), encoding="utf-8")
 print(f"Ditulis: {OUT}")
